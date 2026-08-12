@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gram Panchayat Attendance</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { brand: { 50:'#eef7f2',100:'#d9eee3',600:'#15803d',700:'#166534',800:'#14532d' } }
+  }}
+}
+</script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+<!-- Login -->
+<section id="loginPage" class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-green-50 via-white to-emerald-50">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-7">
+      <div class="mx-auto w-16 h-16 rounded-2xl bg-green-700 text-white grid place-items-center text-2xl font-bold shadow-lg">GP</div>
+      <h1 class="text-2xl font-bold mt-4">Gram Panchayat</h1>
+      <p class="text-slate-500">Digital Attendance Management</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-7">
+      <h2 class="text-xl font-bold">Staff Login</h2>
+      <p class="text-sm text-slate-500 mt-1 mb-6">Authorized staff only</p>
+      <label class="text-sm font-medium">Username</label>
+      <input id="username" class="w-full mt-2 mb-4 px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-green-500" placeholder="Enter username" value="admin">
+      <label class="text-sm font-medium">Password</label>
+      <input id="password" type="password" class="w-full mt-2 px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-green-500" placeholder="Enter password" value="admin123">
+      <button onclick="login()" class="w-full mt-5 py-3 rounded-xl bg-green-700 hover:bg-green-800 text-white font-semibold">Login</button>
+      <p class="text-xs text-center text-slate-400 mt-4">Demo: admin / admin123</p>
+    </div>
+  </div>
+</section>
+
+<!-- App -->
+<div id="app" class="hidden min-h-screen">
+  <aside class="fixed inset-y-0 left-0 w-64 bg-white border-r hidden lg:block">
+    <div class="p-6 border-b">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-green-700 text-white grid place-items-center font-bold">GP</div>
+        <div><div class="font-bold">Gram Panchayat</div><div class="text-xs text-slate-500">Attendance System</div></div>
+      </div>
+    </div>
+    <nav class="p-4 space-y-1">
+      <button onclick="showPage('dashboard')" class="nav w-full text-left px-4 py-3 rounded-xl bg-green-50 text-green-700 font-medium">Dashboard</button>
+      <button onclick="showPage('employees')" class="nav w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50">Employee List</button>
+      <button onclick="showPage('attendance')" class="nav w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50">Attendance</button>
+      <button onclick="showPage('reports')" class="nav w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50">Reports</button>
+    </nav>
+    <div class="absolute bottom-0 w-full p-4 border-t">
+      <button onclick="logout()" class="w-full py-2.5 rounded-xl border text-red-600 hover:bg-red-50">Logout</button>
+    </div>
+  </aside>
+
+  <main class="lg:ml-64">
+    <header class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b px-5 lg:px-8 py-4 flex items-center justify-between">
+      <div>
+        <h2 id="pageTitle" class="font-bold text-lg">Dashboard</h2>
+        <p class="text-xs text-slate-500">Digital attendance management</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="hidden sm:block text-sm">Admin Staff</span>
+        <div class="w-9 h-9 rounded-full bg-green-100 text-green-700 grid place-items-center font-bold">A</div>
+      </div>
+    </header>
+
+    <div class="lg:hidden p-3 bg-white border-b flex gap-2 overflow-x-auto">
+      <button onclick="showPage('dashboard')" class="px-4 py-2 rounded-lg bg-green-50 text-green-700">Dashboard</button>
+      <button onclick="showPage('employees')" class="px-4 py-2 rounded-lg">Employees</button>
+      <button onclick="showPage('attendance')" class="px-4 py-2 rounded-lg">Attendance</button>
+      <button onclick="showPage('reports')" class="px-4 py-2 rounded-lg">Reports</button>
+    </div>
+
+    <div class="p-5 lg:p-8">
+
+      <!-- Dashboard -->
+      <section id="dashboard" class="page">
+        <div class="mb-7"><h1 class="text-2xl font-bold">Good morning, Admin 👋</h1><p class="text-slate-500 mt-1">Here's today's attendance overview.</p></div>
+        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-7">
+          <div class="bg-white p-5 rounded-2xl border shadow-sm"><p class="text-sm text-slate-500">Total Employees</p><p id="totalEmployees" class="text-3xl font-bold mt-2">8</p></div>
+          <div class="bg-white p-5 rounded-2xl border shadow-sm"><p class="text-sm text-slate-500">Present Today</p><p id="presentCount" class="text-3xl font-bold text-green-700 mt-2">6</p></div>
+          <div class="bg-white p-5 rounded-2xl border shadow-sm"><p class="text-sm text-slate-500">Absent Today</p><p id="absentCount" class="text-3xl font-bold text-red-600 mt-2">1</p></div>
+          <div class="bg-white p-5 rounded-2xl border shadow-sm"><p class="text-sm text-slate-500">On Leave</p><p id="leaveCount" class="text-3xl font-bold text-amber-600 mt-2">1</p></div>
+        </div>
+        <div class="bg-white rounded-2xl border shadow-sm p-5">
+          <div class="flex justify-between items-center mb-4"><h3 class="font-bold">Today's Attendance</h3><button onclick="showPage('attendance')" class="text-sm text-green-700 font-semibold">Mark Attendance →</button></div>
+          <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b"><th class="py-3">Employee</th><th>Department</th><th>Status</th></tr></thead><tbody id="dashTable"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- Employees -->
+      <section id="employees" class="page hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div><h1 class="text-2xl font-bold">Employee List</h1><p class="text-slate-500">Manage Gram Panchayat staff.</p></div>
+          <button onclick="addEmployee()" class="px-5 py-3 bg-green-700 hover:bg-green-800 text-white rounded-xl font-semibold">+ Add Employee</button>
+        </div>
+        <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+          <div class="p-4 border-b"><input oninput="renderEmployees(this.value)" class="w-full sm:w-80 px-4 py-2.5 border rounded-xl" placeholder="Search employee..."></div>
+          <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left bg-slate-50 text-slate-500"><th class="p-4">Employee</th><th>Department</th><th>Role</th><th>Contact</th><th>Action</th></tr></thead><tbody id="employeeTable"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- Attendance -->
+      <section id="attendance" class="page hidden">
+        <div class="mb-6"><h1 class="text-2xl font-bold">Mark Attendance</h1><p class="text-slate-500">Record daily employee attendance.</p></div>
+        <div class="bg-white rounded-2xl border shadow-sm p-5">
+          <div class="grid sm:grid-cols-2 gap-4 mb-6">
+            <div><label class="text-sm font-medium">Date</label><input id="attDate" type="date" class="w-full mt-2 px-4 py-3 border rounded-xl"></div>
+            <div><label class="text-sm font-medium">Department</label><select class="w-full mt-2 px-4 py-3 border rounded-xl"><option>All Departments</option><option>Administration</option><option>Accounts</option><option>Development</option></select></div>
+          </div>
+          <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b text-left text-slate-500"><th class="py-3">Employee</th><th>Department</th><th>Status</th></tr></thead><tbody id="attendanceTable"></tbody></table></div>
+          <button onclick="saveAttendance()" class="mt-6 px-6 py-3 bg-green-700 hover:bg-green-800 text-white rounded-xl font-semibold">Save Attendance</button>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section id="reports" class="page hidden">
+        <div class="mb-6"><h1 class="text-2xl font-bold">Attendance Reports</h1><p class="text-slate-500">View and generate attendance summaries.</p></div>
+        <div class="grid sm:grid-cols-3 gap-4 mb-6">
+          <div class="bg-white p-5 rounded-2xl border"><p class="text-sm text-slate-500">Attendance Rate</p><p class="text-3xl font-bold text-green-700 mt-1">92%</p></div>
+          <div class="bg-white p-5 rounded-2xl border"><p class="text-sm text-slate-500">Working Days</p><p class="text-3xl font-bold mt-1">22</p></div>
+          <div class="bg-white p-5 rounded-2xl border"><p class="text-sm text-slate-500">Total Records</p><p id="recordCount" class="text-3xl font-bold mt-1">176</p></div>
+        </div>
+        <div class="bg-white rounded-2xl border shadow-sm p-5">
+          <div class="flex flex-col sm:flex-row gap-3 justify-between mb-5">
+            <div class="flex gap-2"><input type="month" class="px-3 py-2 border rounded-xl"><select class="px-3 py-2 border rounded-xl"><option>All Employees</option></select></div>
+            <button onclick="window.print()" class="px-5 py-2.5 border rounded-xl font-semibold hover:bg-slate-50">Print Report</button>
+          </div>
+          <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-slate-500"><th class="p-4">Employee</th><th>Present</th><th>Absent</th><th>Leave</th><th>Attendance %</th></tr></thead><tbody>
+          <tr class="border-b"><td class="p-4 font-medium">Rahul Sharma</td><td>20</td><td>1</td><td>1</td><td class="font-semibold text-green-700">91%</td></tr>
+          <tr class="border-b"><td class="p-4 font-medium">Priya Patil</td><td>21</td><td>0</td><td>1</td><td class="font-semibold text-green-700">95%</td></tr>
+          <tr><td class="p-4 font-medium">Amit Verma</td><td>19</td><td>2</td><td>1</td><td class="font-semibold text-green-700">86%</td></tr>
+          </tbody></table></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+const employees = [
+ {id:1,name:"Rahul Sharma",dept:"Administration",role:"Secretary",phone:"98765 43210",status:"Present"},
+ {id:2,name:"Priya Patil",dept:"Accounts",role:"Account Assistant",phone:"98765 12345",status:"Present"},
+ {id:3,name:"Amit Verma",dept:"Development",role:"Clerk",phone:"98670 11122",status:"Absent"},
+ {id:4,name:"Sneha Joshi",dept:"Administration",role:"Data Entry Operator",phone:"98900 22334",status:"Present"},
+ {id:5,name:"Vikas Rao",dept:"Development",role:"Assistant",phone:"98220 33445",status:"Leave"},
+ {id:6,name:"Neha Deshmukh",dept:"Accounts",role:"Accountant",phone:"98123 44556",status:"Present"},
+ {id:7,name:"Rohan Kale",dept:"Development",role:"Clerk",phone:"98001 55667",status:"Present"},
+ {id:8,name:"Pooja Singh",dept:"Administration",role:"Assistant",phone:"97999 66778",status:"Present"}
+];
+
+function login(){
+ const username = document.getElementById('username').value.trim();
+ const password = document.getElementById('password').value;
+ if(username === 'admin' && password === 'admin123'){
+   document.getElementById('loginPage').classList.add('hidden');
+   document.getElementById('app').classList.remove('hidden');
+   init();
+ } else {
+   alert('Invalid username or password!\\nUse: admin / admin123');
+ }
+}
+function logout(){ location.reload(); }
+function showPage(id){
+ document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+ document.getElementById(id).classList.remove('hidden');
+ document.getElementById('pageTitle').textContent={dashboard:'Dashboard',employees:'Employee List',attendance:'Attendance',reports:'Reports'}[id];
+ if(id==='employees') renderEmployees(); if(id==='attendance') renderAttendance();
+}
+function init(){
+ const d=new Date(); document.getElementById('attDate').value=d.toISOString().slice(0,10);
+ renderDashboard(); renderEmployees(); renderAttendance();
+}
+function badge(s){
+ let c=s==='Present'?'bg-green-100 text-green-700':s==='Absent'?'bg-red-100 text-red-700':'bg-amber-100 text-amber-700';
+ return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${c}">${s}</span>`;
+}
+function renderDashboard(){
+ document.getElementById('totalEmployees').textContent=employees.length;
+ document.getElementById('presentCount').textContent=employees.filter(e=>e.status==='Present').length;
+ document.getElementById('absentCount').textContent=employees.filter(e=>e.status==='Absent').length;
+ document.getElementById('leaveCount').textContent=employees.filter(e=>e.status==='Leave').length;
+ document.getElementById('dashTable').innerHTML=employees.map(e=>`<tr class="border-b last:border-0"><td class="py-3 font-medium">${e.name}</td><td>${e.dept}</td><td>${badge(e.status)}</td></tr>`).join('');
+}
+function renderEmployees(q=''){
+ q=q.toLowerCase();
+ document.getElementById('employeeTable').innerHTML=employees.filter(e=>e.name.toLowerCase().includes(q)||e.dept.toLowerCase().includes(q)).map(e=>`<tr class="border-b last:border-0"><td class="p-4 font-medium">${e.name}</td><td>${e.dept}</td><td>${e.role}</td><td>${e.phone}</td><td><button onclick="alert('Employee details can be edited here.')" class="text-green-700 font-semibold">Edit</button></td></tr>`).join('');
+}
+function renderAttendance(){
+ document.getElementById('attendanceTable').innerHTML=employees.map(e=>`<tr class="border-b last:border-0"><td class="py-4 font-medium">${e.name}</td><td>${e.dept}</td><td><div class="flex gap-2"><label><input type="radio" name="s${e.id}" value="Present" ${e.status==='Present'?'checked':''}> Present</label><label><input type="radio" name="s${e.id}" value="Absent" ${e.status==='Absent'?'checked':''}> Absent</label><label><input type="radio" name="s${e.id}" value="Leave" ${e.status==='Leave'?'checked':''}> Leave</label></div></td></tr>`).join('');
+}
+function saveAttendance(){
+ employees.forEach(e=>{const x=document.querySelector(`input[name="s${e.id}"]:checked`); if(x)e.status=x.value;});
+ renderDashboard(); alert('Attendance saved successfully!');
+}
+function addEmployee(){ alert('In the WordPress version, this button will open the Add Employee form.'); }
+</script>
+</body>
+</html>
