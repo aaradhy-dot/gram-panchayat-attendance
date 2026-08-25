@@ -56,6 +56,28 @@
   }
   #loadingScreen { transition: opacity .3s ease; }
   .chart-box{ position:relative; height:260px; }
+
+  /* ---- polish: motion & micro-interactions ---- */
+  .page{ animation: pageIn .35s cubic-bezier(.22,.8,.32,1) both; }
+  @keyframes pageIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  .hoverlift{ transition: transform .18s ease, box-shadow .18s ease; }
+  .hoverlift:hover{ transform: translateY(-3px); box-shadow: 0 12px 24px -12px rgba(21,128,61,.25); }
+  .navBtn{ transition: background-color .15s ease, color .15s ease, transform .1s ease; }
+  .navBtn:hover{ transform: translateX(2px); }
+  .navBtn.active{ position:relative; }
+  .navBtn.active::before{ content:""; position:absolute; left:-16px; top:50%; transform:translateY(-50%); width:4px; height:60%; border-radius:4px; background:#15803d; }
+  button{ transition: transform .12s ease, background-color .15s ease, box-shadow .15s ease; }
+  button:active{ transform: scale(.97); }
+  tr{ transition: background-color .15s ease; }
+  .notif-dot{ display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 4px; border-radius:9999px; background:#dc2626; color:#fff; font-size:10px; font-weight:800; margin-left:auto; animation: pulseDot 2s ease-in-out infinite; }
+  @keyframes pulseDot{ 0%,100%{ box-shadow:0 0 0 0 rgba(220,38,38,.5);} 50%{ box-shadow:0 0 0 5px rgba(220,38,38,0);} }
+  .avatar-btn{ cursor:pointer; transition: transform .15s ease; }
+  .avatar-btn:hover{ transform: scale(1.08); }
+  #bottomNav{ display:none; }
+  @media (max-width:1023px){
+    #bottomNav{ display:flex; }
+    main.lg\:ml-64{ padding-bottom: 78px; }
+  }
 </style>
 </head>
 <body class="min-h-screen">
@@ -140,7 +162,7 @@
       <button onclick="showPage('dashboard')" data-page="dashboard" class="navBtn active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">📊 <span data-i18n="navDashboard">Dashboard</span></button>
       <button onclick="showPage('employees')" data-page="employees" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">👥 <span data-i18n="navEmployees">Employees</span></button>
       <button onclick="showPage('attendance')" data-page="attendance" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">📝 <span data-i18n="navAttendance">Attendance</span></button>
-      <button onclick="showPage('leave')" data-page="leave" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">🗂 <span data-i18n="navLeave">Leave</span></button>
+      <button onclick="showPage('leave')" data-page="leave" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">🗂 <span data-i18n="navLeave">Leave</span><span id="leaveNotifDot" class="notif-dot hidden"></span></button>
       <button onclick="showPage('holidays')" data-page="holidays" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">📅 <span data-i18n="navHolidays">Holidays</span></button>
       <button onclick="showPage('reports')" data-page="reports" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">📈 <span data-i18n="navReports">Reports</span></button>
     </nav>
@@ -176,7 +198,7 @@
       <button onclick="mobileNavigate('dashboard')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">📊 <span data-i18n="navDashboard">Dashboard</span></button>
       <button onclick="mobileNavigate('employees')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">👥 <span data-i18n="navEmployees">Employees</span></button>
       <button onclick="mobileNavigate('attendance')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">📝 <span data-i18n="navAttendance">Attendance</span></button>
-      <button onclick="mobileNavigate('leave')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">🗂 <span data-i18n="navLeave">Leave</span></button>
+      <button onclick="mobileNavigate('leave')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20 flex items-center">🗂 <span data-i18n="navLeave">Leave</span><span id="leaveNotifDotMobile" class="notif-dot hidden"></span></button>
       <button onclick="mobileNavigate('holidays')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">📅 <span data-i18n="navHolidays">Holidays</span></button>
       <button onclick="mobileNavigate('reports')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">📈 <span data-i18n="navReports">Reports</span></button>
       <div class="pt-2 space-y-2">
@@ -448,6 +470,26 @@
 
     </div>
   </main>
+
+  <!-- BOTTOM MOBILE NAV -->
+  <nav id="bottomNav" class="fixed bottom-0 inset-x-0 z-40 surface border-t lg:hidden items-center justify-around py-2 px-1" style="border-color:var(--border)">
+    <button onclick="showPage('dashboard')" data-page="dashboard" class="bottomNavBtn flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-semibold muted">
+      <span class="text-lg">📊</span><span data-i18n="navDashboard">Dashboard</span>
+    </button>
+    <button onclick="showPage('attendance')" data-page="attendance" class="bottomNavBtn flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-semibold muted">
+      <span class="text-lg">📝</span><span data-i18n="navAttendance">Attendance</span>
+    </button>
+    <button onclick="showPage('leave')" data-page="leave" class="bottomNavBtn relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-semibold muted">
+      <span class="text-lg">🗂</span><span data-i18n="navLeave">Leave</span>
+      <span id="leaveNotifDotBottom" class="notif-dot hidden absolute -top-0.5 right-1"></span>
+    </button>
+    <button onclick="showPage('employees')" data-page="employees" class="bottomNavBtn flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-semibold muted">
+      <span class="text-lg">👥</span><span data-i18n="navEmployees">Employees</span>
+    </button>
+    <button onclick="showPage('reports')" data-page="reports" class="bottomNavBtn flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-semibold muted">
+      <span class="text-lg">📈</span><span data-i18n="navReports">Reports</span>
+    </button>
+  </nav>
 </div>
 
 
@@ -487,6 +529,54 @@
         <button type="submit" class="px-6 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold" data-i18n="saveEmployeeBtn">Save Employee</button>
       </div>
     </form>
+  </div>
+</div>
+
+
+<!-- EMPLOYEE PROFILE MODAL -->
+<div id="profileModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4">
+  <div class="surface w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+    <div class="p-6 bg-gradient-to-br from-brand-700 to-brand-900 text-white relative">
+      <button onclick="closeProfileModal()" class="absolute right-4 top-4 w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 grid place-items-center">✕</button>
+      <div class="flex items-center gap-4">
+        <div id="profileAvatar" class="w-16 h-16 rounded-full bg-white/20 grid place-items-center font-black text-2xl font-display"></div>
+        <div>
+          <p id="profileName" class="text-xl font-black font-display"></p>
+          <p id="profileRoleDept" class="text-sm text-brand-100"></p>
+        </div>
+      </div>
+    </div>
+    <div class="p-6">
+      <div class="flex items-center justify-between text-sm mb-5">
+        <span class="muted" data-i18n="tableContact">Contact</span>
+        <span id="profilePhone" class="font-semibold"></span>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mb-5">
+        <div class="text-center p-3 rounded-xl bg-brand-50 dark:bg-brand-900/20">
+          <p id="profilePresent" class="text-xl font-black text-brand-700 dark:text-brand-400 font-display">0</p>
+          <p class="text-[11px] muted mt-1" data-i18n="summaryPresent">Present</p>
+        </div>
+        <div class="text-center p-3 rounded-xl bg-red-50 dark:bg-red-900/15">
+          <p id="profileAbsent" class="text-xl font-black text-red-600 dark:text-red-400 font-display">0</p>
+          <p class="text-[11px] muted mt-1" data-i18n="summaryAbsent">Absent</p>
+        </div>
+        <div class="text-center p-3 rounded-xl bg-marigold-500/10">
+          <p id="profileLeave" class="text-xl font-black text-marigold-600 font-display">0</p>
+          <p class="text-[11px] muted mt-1" data-i18n="summaryLeave">Leave</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-between text-sm mb-1">
+        <span class="muted" data-i18n="attendanceRate">Attendance Rate</span>
+        <span id="profilePct" class="font-bold">0%</span>
+      </div>
+      <div class="w-full h-2.5 rounded-full" style="background:var(--ring-track)">
+        <div id="profileBar" class="h-2.5 rounded-full bg-brand-600 transition-all duration-700" style="width:0%"></div>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button onclick="closeProfileModal(); editEmployee(profileEmployeeId);" class="flex-1 py-3 rounded-xl border font-semibold" style="border-color:var(--border)" data-i18n="editBtn">Edit</button>
+        <button onclick="closeProfileModal()" class="flex-1 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold" data-i18n="cancelBtn">Cancel</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -780,6 +870,7 @@ let attendance = {};
 let holidays = [];
 let leaveRequests = [];
 let deleteEmployeeId = null;
+let profileEmployeeId = null;
 let loggedIn = false;
 let storageAvailable = false;
 let darkMode = false;
@@ -973,6 +1064,7 @@ function init() {
   renderHolidays();
   populateReportEmployees();
   renderReports();
+  updateLeaveNotifBadge();
 }
 
 function updateDate() {
@@ -993,6 +1085,11 @@ function showPage(id) {
   document.querySelectorAll(".navBtn").forEach(btn => {
     btn.classList.remove("bg-brand-50", "text-brand-700", "dark:bg-brand-900/30", "dark:text-brand-300", "active");
     if (btn.dataset.page === id) btn.classList.add("bg-brand-50", "text-brand-700", "dark:bg-brand-900/30", "dark:text-brand-300", "active");
+  });
+  document.querySelectorAll(".bottomNavBtn").forEach(btn => {
+    btn.classList.remove("text-brand-700", "dark:text-brand-400");
+    btn.classList.add("muted");
+    if (btn.dataset.page === id) { btn.classList.remove("muted"); btn.classList.add("text-brand-700", "dark:text-brand-400"); }
   });
 
   if (id === "dashboard") renderDashboard();
@@ -1112,10 +1209,10 @@ function renderDashboard() {
   const today = getToday();
   const statuses = employees.map(e => getStatus(e.id, today));
 
-  document.getElementById("totalEmployees").textContent = employees.length;
-  document.getElementById("presentCount").textContent = statuses.filter(s => s === "Present").length;
-  document.getElementById("absentCount").textContent = statuses.filter(s => s === "Absent").length;
-  document.getElementById("leaveCount").textContent = statuses.filter(s => s === "Leave").length;
+  animateCount("totalEmployees", employees.length);
+  animateCount("presentCount", statuses.filter(s => s === "Present").length);
+  animateCount("absentCount", statuses.filter(s => s === "Absent").length);
+  animateCount("leaveCount", statuses.filter(s => s === "Leave").length);
 
   document.getElementById("dashTable").innerHTML = employees.map(e => {
     const status = getStatus(e.id, today);
@@ -1157,7 +1254,7 @@ function renderEmployees() {
     return `
       <tr class="border-b last:border-0 hover:bg-brand-50/40 dark:hover:bg-white/5" style="border-color:var(--border)">
         <td class="p-4">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 cursor-pointer avatar-btn" onclick="openProfileModal(${e.id})">
             <div class="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 grid place-items-center font-bold">${escapeHTML(e.name.charAt(0))}</div>
             <div>
               <p class="font-bold">${escapeHTML(e.name)}</p>
@@ -1232,6 +1329,85 @@ function saveEmployee() {
   renderEmployees();
   renderDashboard();
   populateReportEmployees();
+}
+
+/* =========================================================
+   EMPLOYEE PROFILE
+========================================================= */
+function openProfileModal(id) {
+  const employee = employees.find(e => e.id === id);
+  if (!employee) return;
+  profileEmployeeId = id;
+
+  document.getElementById("profileAvatar").textContent = employee.name.charAt(0);
+  document.getElementById("profileName").textContent = employee.name;
+  document.getElementById("profileRoleDept").textContent = `${employee.role} • ${deptLabel(employee.dept)}`;
+  document.getElementById("profilePhone").textContent = employee.phone;
+
+  const month = getToday().slice(0, 7);
+  const [year, mon] = month.split("-").map(Number);
+  const daysInMonth = new Date(year, mon, 0).getDate();
+  let present = 0, absent = 0, leave = 0;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = `${year}-${String(mon).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    const key = attendanceKey(id, date);
+    if (attendance[key]) {
+      const status = attendance[key];
+      if (status === "Present") present++;
+      if (status === "Absent") absent++;
+      if (status === "Leave") leave++;
+    }
+  }
+  const total = present + absent + leave;
+  const pct = total ? Math.round((present / total) * 100) : 0;
+
+  document.getElementById("profilePresent").textContent = present;
+  document.getElementById("profileAbsent").textContent = absent;
+  document.getElementById("profileLeave").textContent = leave;
+  document.getElementById("profilePct").textContent = pct + "%";
+  const bar = document.getElementById("profileBar");
+  setTimeout(() => { bar.style.width = pct + "%"; }, 50);
+
+  document.getElementById("profileModal").classList.remove("hidden");
+  document.getElementById("profileModal").classList.add("flex");
+}
+function closeProfileModal() {
+  document.getElementById("profileModal").classList.add("hidden");
+  document.getElementById("profileModal").classList.remove("flex");
+  document.getElementById("profileBar").style.width = "0%";
+}
+
+/* =========================================================
+   ANIMATED COUNTERS
+========================================================= */
+function animateCount(elId, target) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const start = Number(el.dataset.count || 0);
+  if (start === target) { el.textContent = target; return; }
+  const duration = 500;
+  const startTime = performance.now();
+  function step(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const value = Math.round(start + (target - start) * eased);
+    el.textContent = value;
+    if (progress < 1) requestAnimationFrame(step); else el.dataset.count = target;
+  }
+  requestAnimationFrame(step);
+}
+
+/* =========================================================
+   NOTIFICATION BADGE (pending leave requests)
+========================================================= */
+function updateLeaveNotifBadge() {
+  const pending = leaveRequests.filter(l => l.status === "Pending").length;
+  ["leaveNotifDot","leaveNotifDotMobile","leaveNotifDotBottom"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (pending > 0) { el.textContent = pending > 9 ? "9+" : pending; el.classList.remove("hidden"); }
+    else { el.classList.add("hidden"); }
+  });
 }
 
 /* =========================================================
@@ -1444,6 +1620,8 @@ function renderLeave() {
         <td class="pr-4">${actions}</td>
       </tr>`;
   }).join("");
+
+  updateLeaveNotifBadge();
 }
 
 /* =========================================================
