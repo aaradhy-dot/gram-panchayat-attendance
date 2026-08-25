@@ -5,22 +5,49 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gram Panchayat Attendance Management</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script>
   tailwind.config = {
+    darkMode: 'class',
     theme: {
       extend: {
         colors: {
-          brand: { 50:"#eef7f2",100:"#d9eee3",200:"#b7ddc8",500:"#22a05a",600:"#15803d",700:"#166534",800:"#14532d",900:"#0f3d21" }
+          brand: { 50:"#eef7f2",100:"#d9eee3",200:"#b7ddc8",500:"#22a05a",600:"#15803d",700:"#136b34",800:"#14532d",900:"#0f3d21" },
+          seal:  { 500:"#3a5a7d", 600:"#2c4767", 700:"#1e3a5f", 800:"#16304f" },
+          marigold: { 400:"#f5a524", 500:"#e08e0b", 600:"#c2740a" }
         },
-        fontFamily: { devanagari: ["Noto Sans Devanagari","system-ui","sans-serif"] }
+        fontFamily: {
+          devanagari: ["Noto Sans Devanagari","system-ui","sans-serif"],
+          display: ["Manrope","Noto Sans Devanagari","system-ui","sans-serif"]
+        }
       }
     }
   }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&family=Manrope:wght@500;700;800;900&display=swap" rel="stylesheet">
 <style>
-  body { font-family: "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif; }
+  :root{
+    --bg:#f6f7f2; --surface:#ffffff; --ink:#1c2b22; --muted:#5c6d61; --border:#e4e7de; --ring-track:#e9ece2;
+  }
+  html.dark{
+    --bg:#0f1613; --surface:#17211c; --ink:#eef3ee; --muted:#93a89a; --border:#28362f; --ring-track:#243029;
+  }
+  body { font-family: "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif; background:var(--bg); color:var(--ink); transition:background .25s ease,color .25s ease; }
+  .font-display{ font-family:"Manrope","Noto Sans Devanagari",ui-sans-serif,system-ui,sans-serif; }
+  .tricolor-strip{ height:4px; background:linear-gradient(90deg,#ff9933 0 33%, #ffffff 33% 66%, #138808 66% 100%); }
+  .surface{ background:var(--surface); border-color:var(--border) !important; }
+  .ink{ color:var(--ink) !important; }
+  .muted{ color:var(--muted) !important; }
+  .ledger-bg{
+    background-image: repeating-linear-gradient(to bottom, transparent, transparent 27px, var(--border) 28px);
+    background-position: 0 6px;
+  }
+  html.dark .ledger-bg{ opacity:.9; }
+  .ring-wrap{ --pct:0; width:132px; height:132px; border-radius:50%;
+    background: conic-gradient(var(--ring-col,#15803d) calc(var(--pct)*1%), var(--ring-track) 0);
+    display:grid; place-items:center; transition:background 1s ease; }
+  .ring-inner{ width:104px; height:104px; border-radius:50%; background:var(--surface); display:grid; place-items:center; }
   @media print {
     body * { visibility: hidden; }
     #printArea, #printArea * { visibility: visible; }
@@ -28,24 +55,28 @@
     .no-print { display: none !important; }
   }
   #loadingScreen { transition: opacity .3s ease; }
+  .chart-box{ position:relative; height:260px; }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="min-h-screen">
 
 <!-- LOADING SCREEN -->
-<div id="loadingScreen" class="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center gap-4">
-  <div class="w-14 h-14 rounded-2xl bg-green-700 text-white grid place-items-center font-black text-xl animate-pulse">GP</div>
-  <p id="loadingText" class="text-slate-500 text-sm font-semibold">Loading...</p>
+<div id="loadingScreen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4" style="background:var(--bg)">
+  <div class="w-14 h-14 rounded-2xl bg-brand-700 text-white grid place-items-center font-black text-xl animate-pulse font-display">GP</div>
+  <p id="loadingText" class="muted text-sm font-semibold">Loading...</p>
 </div>
 
 <!-- ========================================================= -->
 <!-- LOGIN PAGE -->
 <!-- ========================================================= -->
-<section id="loginPage" class="hidden min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-green-50 via-white to-emerald-100">
+<section id="loginPage" class="hidden min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-brand-50 via-white to-emerald-100 dark:from-[#0f1613] dark:via-[#111a15] dark:to-[#0d1512]">
   <div class="w-full max-w-md">
 
-    <div class="flex justify-end mb-3">
-      <select id="langSwitcherLogin" onchange="setLanguage(this.value)" class="text-sm font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white shadow-sm outline-none focus:ring-2 focus:ring-green-500">
+    <div class="flex justify-end mb-3 gap-2">
+      <button onclick="toggleDarkMode()" class="w-11 h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm grid place-items-center" title="Toggle dark mode">
+        <span id="darkIconLogin">🌙</span>
+      </button>
+      <select id="langSwitcherLogin" onchange="setLanguage(this.value)" class="text-sm font-semibold px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm outline-none focus:ring-2 focus:ring-brand-500">
         <option value="en">English</option>
         <option value="hi">हिंदी</option>
         <option value="mr">मराठी</option>
@@ -53,34 +84,35 @@
     </div>
 
     <div class="text-center mb-8">
-      <div class="mx-auto w-20 h-20 rounded-3xl bg-green-700 text-white flex items-center justify-center text-3xl font-black shadow-xl">GP</div>
-      <h1 class="text-3xl font-black mt-5 text-slate-800" data-i18n="appName">Gram Panchayat</h1>
-      <p class="text-slate-500 mt-1" data-i18n="appTagline">Digital Attendance Management</p>
+      <div class="mx-auto w-20 h-20 rounded-3xl bg-brand-700 text-white flex items-center justify-center text-3xl font-black shadow-xl font-display">GP</div>
+      <div class="tricolor-strip w-24 mx-auto mt-4 rounded-full"></div>
+      <h1 class="text-3xl font-black mt-5 font-display" data-i18n="appName">Gram Panchayat</h1>
+      <p class="muted mt-1" data-i18n="appTagline">Digital Attendance Management</p>
     </div>
 
-    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 p-8">
+    <div class="surface rounded-3xl shadow-2xl border p-8">
       <div class="mb-6">
-        <h2 class="text-2xl font-bold" data-i18n="loginHeading">Staff Login</h2>
-        <p class="text-sm text-slate-500 mt-1" data-i18n="loginSub">Login to manage staff attendance</p>
+        <h2 class="text-2xl font-bold font-display" data-i18n="loginHeading">Staff Login</h2>
+        <p class="text-sm muted mt-1" data-i18n="loginSub">Login to manage staff attendance</p>
       </div>
 
       <form onsubmit="event.preventDefault(); login();">
         <label class="text-sm font-semibold" data-i18n="usernameLabel">Username</label>
         <input id="username" type="text" value="admin" data-i18n-placeholder="usernamePlaceholder" placeholder="Enter username"
-          class="w-full mt-2 mb-5 px-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+          class="w-full mt-2 mb-5 px-4 py-3.5 border border-slate-200 dark:border-slate-700 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
 
         <label class="text-sm font-semibold" data-i18n="passwordLabel">Password</label>
         <div class="relative">
           <input id="password" type="password" value="admin123" data-i18n-placeholder="passwordPlaceholder" placeholder="Enter password"
-            class="w-full mt-2 px-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition pr-12">
-          <button type="button" onclick="togglePassword()" class="absolute right-3 top-5 text-slate-400 hover:text-green-700">👁</button>
+            class="w-full mt-2 px-4 py-3.5 border border-slate-200 dark:border-slate-700 bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition pr-12">
+          <button type="button" onclick="togglePassword()" class="absolute right-3 top-5 muted hover:text-brand-700">👁</button>
         </div>
 
-        <button type="submit" class="w-full mt-6 py-3.5 rounded-xl bg-green-700 hover:bg-green-800 active:scale-[.98] text-white font-bold transition shadow-lg shadow-green-700/20" data-i18n="loginBtn">Login</button>
+        <button type="submit" class="w-full mt-6 py-3.5 rounded-xl bg-brand-700 hover:bg-brand-800 active:scale-[.98] text-white font-bold transition shadow-lg shadow-brand-700/20" data-i18n="loginBtn">Login</button>
       </form>
 
-      <div class="mt-5 p-3 rounded-xl bg-green-50 border border-green-100 text-center">
-        <p class="text-xs text-green-700"><span data-i18n="demoLoginNote">Demo Login:</span> <b>admin</b> / <b>admin123</b></p>
+      <div class="mt-5 p-3 rounded-xl bg-brand-50 dark:bg-brand-900/30 border border-brand-100 dark:border-brand-800 text-center">
+        <p class="text-xs text-brand-700 dark:text-brand-200"><span data-i18n="demoLoginNote">Demo Login:</span> <b>admin</b> / <b>admin123</b></p>
       </div>
     </div>
   </div>
@@ -92,78 +124,90 @@
 <!-- ========================================================= -->
 <div id="app" class="hidden min-h-screen">
 
-  <aside class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 hidden lg:flex flex-col">
-    <div class="p-6 border-b">
+  <aside class="fixed inset-y-0 left-0 z-40 w-64 surface border-r hidden lg:flex flex-col">
+    <div class="tricolor-strip"></div>
+    <div class="p-6 border-b" style="border-color:var(--border)">
       <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-green-700 text-white flex items-center justify-center font-black">GP</div>
+        <div class="w-11 h-11 rounded-xl bg-brand-700 text-white flex items-center justify-center font-black font-display">GP</div>
         <div>
-          <div class="font-black" data-i18n="appName">Gram Panchayat</div>
-          <div class="text-xs text-slate-500" data-i18n="appSystemLabel">Attendance System</div>
+          <div class="font-black font-display" data-i18n="appName">Gram Panchayat</div>
+          <div class="text-xs muted" data-i18n="appSystemLabel">Attendance System</div>
         </div>
       </div>
     </div>
 
-    <nav class="p-4 space-y-2 flex-1">
+    <nav class="p-4 space-y-1.5 flex-1 overflow-y-auto">
       <button onclick="showPage('dashboard')" data-page="dashboard" class="navBtn active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">📊 <span data-i18n="navDashboard">Dashboard</span></button>
       <button onclick="showPage('employees')" data-page="employees" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">👥 <span data-i18n="navEmployees">Employees</span></button>
       <button onclick="showPage('attendance')" data-page="attendance" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">📝 <span data-i18n="navAttendance">Attendance</span></button>
+      <button onclick="showPage('leave')" data-page="leave" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">🗂 <span data-i18n="navLeave">Leave</span></button>
+      <button onclick="showPage('holidays')" data-page="holidays" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">📅 <span data-i18n="navHolidays">Holidays</span></button>
       <button onclick="showPage('reports')" data-page="reports" class="navBtn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold">📈 <span data-i18n="navReports">Reports</span></button>
     </nav>
 
-    <div class="p-4 border-t space-y-3">
-      <select id="langSwitcherSidebar" onchange="setLanguage(this.value)" class="w-full text-sm font-semibold px-3 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-green-500">
+    <div class="p-4 border-t space-y-3" style="border-color:var(--border)">
+      <button onclick="toggleDarkMode()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold" style="border-color:var(--border)">
+        <span id="darkIconSidebar">🌙</span> <span id="darkLabelSidebar" data-i18n="darkModeToggle">Dark Mode</span>
+      </button>
+      <select id="langSwitcherSidebar" onchange="setLanguage(this.value)" class="w-full text-sm font-semibold px-3 py-2.5 rounded-xl border bg-transparent outline-none focus:ring-2 focus:ring-brand-500" style="border-color:var(--border)">
         <option value="en">English</option>
         <option value="hi">हिंदी</option>
         <option value="mr">मराठी</option>
       </select>
-      <button onclick="logout()" class="w-full py-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 font-semibold transition">🚪 <span data-i18n="logout">Logout</span></button>
+      <button onclick="logout()" class="w-full py-3 rounded-xl border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold transition">🚪 <span data-i18n="logout">Logout</span></button>
     </div>
   </aside>
 
   <div id="mobileOverlay" onclick="closeMobileMenu()" class="hidden fixed inset-0 bg-black/40 z-30 lg:hidden"></div>
 
-  <aside id="mobileSidebar" class="fixed inset-y-0 left-0 z-40 w-72 bg-white shadow-2xl -translate-x-full transition-transform lg:hidden">
-    <div class="p-5 border-b flex items-center justify-between">
+  <aside id="mobileSidebar" class="fixed inset-y-0 left-0 z-40 w-72 surface shadow-2xl -translate-x-full transition-transform lg:hidden">
+    <div class="tricolor-strip"></div>
+    <div class="p-5 border-b flex items-center justify-between" style="border-color:var(--border)">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-green-700 text-white grid place-items-center font-bold">GP</div>
+        <div class="w-10 h-10 rounded-xl bg-brand-700 text-white grid place-items-center font-bold font-display">GP</div>
         <div>
           <p class="font-bold" data-i18n="appName">Gram Panchayat</p>
-          <p class="text-xs text-slate-500" data-i18n="appTagline">Attendance</p>
+          <p class="text-xs muted" data-i18n="appTagline">Attendance</p>
         </div>
       </div>
       <button onclick="closeMobileMenu()" class="text-xl">✕</button>
     </div>
-    <nav class="p-4 space-y-2">
-      <button onclick="mobileNavigate('dashboard')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-green-50">📊 <span data-i18n="navDashboard">Dashboard</span></button>
-      <button onclick="mobileNavigate('employees')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-green-50">👥 <span data-i18n="navEmployees">Employees</span></button>
-      <button onclick="mobileNavigate('attendance')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-green-50">📝 <span data-i18n="navAttendance">Attendance</span></button>
-      <button onclick="mobileNavigate('reports')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-green-50">📈 <span data-i18n="navReports">Reports</span></button>
-      <div class="pt-2">
-        <select id="langSwitcherMobile" onchange="setLanguage(this.value)" class="w-full text-sm font-semibold px-3 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-green-500">
+    <nav class="p-4 space-y-1.5">
+      <button onclick="mobileNavigate('dashboard')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">📊 <span data-i18n="navDashboard">Dashboard</span></button>
+      <button onclick="mobileNavigate('employees')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">👥 <span data-i18n="navEmployees">Employees</span></button>
+      <button onclick="mobileNavigate('attendance')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">📝 <span data-i18n="navAttendance">Attendance</span></button>
+      <button onclick="mobileNavigate('leave')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">🗂 <span data-i18n="navLeave">Leave</span></button>
+      <button onclick="mobileNavigate('holidays')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">📅 <span data-i18n="navHolidays">Holidays</span></button>
+      <button onclick="mobileNavigate('reports')" class="w-full text-left px-4 py-3 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20">📈 <span data-i18n="navReports">Reports</span></button>
+      <div class="pt-2 space-y-2">
+        <button onclick="toggleDarkMode()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold" style="border-color:var(--border)">
+          <span id="darkIconMobile">🌙</span> <span data-i18n="darkModeToggle">Dark Mode</span>
+        </button>
+        <select id="langSwitcherMobile" onchange="setLanguage(this.value)" class="w-full text-sm font-semibold px-3 py-2.5 rounded-xl border bg-transparent outline-none focus:ring-2 focus:ring-brand-500" style="border-color:var(--border)">
           <option value="en">English</option>
           <option value="hi">हिंदी</option>
           <option value="mr">मराठी</option>
         </select>
       </div>
-      <button onclick="logout()" class="w-full text-left px-4 py-3 rounded-xl text-red-600 hover:bg-red-50">🚪 <span data-i18n="logout">Logout</span></button>
+      <button onclick="logout()" class="w-full text-left px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">🚪 <span data-i18n="logout">Logout</span></button>
     </nav>
   </aside>
 
   <main class="lg:ml-64">
-    <header class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+    <header class="sticky top-0 z-20 surface/90 backdrop-blur border-b px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between" style="border-color:var(--border); background:var(--surface)">
       <div class="flex items-center gap-3">
-        <button onclick="openMobileMenu()" class="lg:hidden w-10 h-10 rounded-xl bg-slate-100 hover:bg-green-50">☰</button>
+        <button onclick="openMobileMenu()" class="lg:hidden w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-900/30 hover:bg-brand-100">☰</button>
         <div>
-          <h2 id="pageTitle" class="font-black text-lg" data-i18n="navDashboard">Dashboard</h2>
-          <p id="currentDate" class="text-xs text-slate-500"></p>
+          <h2 id="pageTitle" class="font-black text-lg font-display" data-i18n="navDashboard">Dashboard</h2>
+          <p id="currentDate" class="text-xs muted"></p>
         </div>
       </div>
       <div class="flex items-center gap-3">
         <div class="hidden sm:block text-right">
           <p class="text-sm font-semibold" data-i18n="adminStaff">Admin Staff</p>
-          <p class="text-xs text-slate-500" data-i18n="administrator">Administrator</p>
+          <p class="text-xs muted" data-i18n="administrator">Administrator</p>
         </div>
-        <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 grid place-items-center font-bold">A</div>
+        <div class="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 grid place-items-center font-bold font-display">A</div>
       </div>
     </header>
 
@@ -172,48 +216,61 @@
       <!-- DASHBOARD -->
       <section id="dashboard" class="page">
         <div class="mb-7">
-          <h1 class="text-2xl sm:text-3xl font-black"><span data-i18n="goodMorning">Good Morning, Admin</span> 👋</h1>
-          <p class="text-slate-500 mt-1" data-i18n="dashboardSub">Here's today's attendance overview.</p>
+          <h1 class="text-2xl sm:text-3xl font-black font-display"><span data-i18n="goodMorning">Good Morning, Admin</span> 👋</h1>
+          <p class="muted mt-1" data-i18n="dashboardSub">Here's today's attendance overview.</p>
         </div>
 
         <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-7">
-          <div class="bg-white p-5 rounded-2xl border shadow-sm">
+          <div class="surface p-5 rounded-2xl border shadow-sm ledger-bg">
             <div class="flex justify-between items-start">
-              <div><p class="text-sm text-slate-500" data-i18n="statTotalEmployees">Total Employees</p><p id="totalEmployees" class="text-3xl font-black mt-2">0</p></div>
-              <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 grid place-items-center">👥</div>
+              <div><p class="text-sm muted" data-i18n="statTotalEmployees">Total Employees</p><p id="totalEmployees" class="text-3xl font-black mt-2 font-display">0</p></div>
+              <div class="w-11 h-11 rounded-xl bg-seal-700/10 text-seal-700 dark:text-seal-500 grid place-items-center">👥</div>
             </div>
           </div>
-          <div class="bg-white p-5 rounded-2xl border shadow-sm">
+          <div class="surface p-5 rounded-2xl border shadow-sm ledger-bg">
             <div class="flex justify-between items-start">
-              <div><p class="text-sm text-slate-500" data-i18n="statPresentToday">Present Today</p><p id="presentCount" class="text-3xl font-black text-green-700 mt-2">0</p></div>
-              <div class="w-11 h-11 rounded-xl bg-green-50 text-green-600 grid place-items-center">✓</div>
+              <div><p class="text-sm muted" data-i18n="statPresentToday">Present Today</p><p id="presentCount" class="text-3xl font-black text-brand-700 dark:text-brand-400 mt-2 font-display">0</p></div>
+              <div class="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-900/30 text-brand-600 grid place-items-center">✓</div>
             </div>
           </div>
-          <div class="bg-white p-5 rounded-2xl border shadow-sm">
+          <div class="surface p-5 rounded-2xl border shadow-sm ledger-bg">
             <div class="flex justify-between items-start">
-              <div><p class="text-sm text-slate-500" data-i18n="statAbsentToday">Absent Today</p><p id="absentCount" class="text-3xl font-black text-red-600 mt-2">0</p></div>
-              <div class="w-11 h-11 rounded-xl bg-red-50 text-red-600 grid place-items-center">✕</div>
+              <div><p class="text-sm muted" data-i18n="statAbsentToday">Absent Today</p><p id="absentCount" class="text-3xl font-black text-red-600 dark:text-red-400 mt-2 font-display">0</p></div>
+              <div class="w-11 h-11 rounded-xl bg-red-50 dark:bg-red-900/30 text-red-600 grid place-items-center">✕</div>
             </div>
           </div>
-          <div class="bg-white p-5 rounded-2xl border shadow-sm">
+          <div class="surface p-5 rounded-2xl border shadow-sm ledger-bg">
             <div class="flex justify-between items-start">
-              <div><p class="text-sm text-slate-500" data-i18n="statOnLeave">On Leave</p><p id="leaveCount" class="text-3xl font-black text-amber-600 mt-2">0</p></div>
-              <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 grid place-items-center">🗓</div>
+              <div><p class="text-sm muted" data-i18n="statOnLeave">On Leave</p><p id="leaveCount" class="text-3xl font-black text-marigold-600 dark:text-marigold-400 mt-2 font-display">0</p></div>
+              <div class="w-11 h-11 rounded-xl bg-marigold-500/10 text-marigold-600 grid place-items-center">🗓</div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border shadow-sm">
-          <div class="p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="grid lg:grid-cols-2 gap-4 mb-7">
+          <div class="surface rounded-2xl border shadow-sm p-5">
+            <h3 class="font-black" data-i18n="weeklyTrendTitle">Last 7 Days Trend</h3>
+            <p class="text-sm muted mb-3" data-i18n="weeklyTrendSub">Present / Absent / Leave over the last week</p>
+            <div class="chart-box"><canvas id="weeklyTrendChart"></canvas></div>
+          </div>
+          <div class="surface rounded-2xl border shadow-sm p-5">
+            <h3 class="font-black" data-i18n="deptDistributionTitle">Today's Department Split</h3>
+            <p class="text-sm muted mb-3" data-i18n="deptDistributionSub">Present staff by department</p>
+            <div class="chart-box"><canvas id="deptDonutChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="surface rounded-2xl border shadow-sm">
+          <div class="p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style="border-color:var(--border)">
             <div>
               <h3 class="font-black text-lg" data-i18n="todaysAttendance">Today's Attendance</h3>
-              <p class="text-sm text-slate-500" data-i18n="todaysAttendanceSub">Current attendance status</p>
+              <p class="text-sm muted" data-i18n="todaysAttendanceSub">Current attendance status</p>
             </div>
-            <button onclick="showPage('attendance')" class="px-4 py-2.5 rounded-xl bg-green-700 hover:bg-green-800 text-white text-sm font-semibold"><span data-i18n="markAttendanceBtn">Mark Attendance</span> →</button>
+            <button onclick="showPage('attendance')" class="px-4 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold"><span data-i18n="markAttendanceBtn">Mark Attendance</span> →</button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead><tr class="text-left text-slate-500 bg-slate-50 border-b">
+              <thead><tr class="text-left muted bg-brand-50/60 dark:bg-white/5 border-b" style="border-color:var(--border)">
                 <th class="p-4" data-i18n="tableEmployee">Employee</th><th data-i18n="tableDepartment">Department</th><th data-i18n="tableRole">Role</th><th data-i18n="tableStatus">Status</th>
               </tr></thead>
               <tbody id="dashTable"></tbody>
@@ -227,24 +284,24 @@
       <section id="employees" class="page hidden">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 class="text-2xl sm:text-3xl font-black" data-i18n="employeeMgmtTitle">Employee Management</h1>
-            <p class="text-slate-500 mt-1" data-i18n="employeeMgmtSub">Add, edit and manage Gram Panchayat staff.</p>
+            <h1 class="text-2xl sm:text-3xl font-black font-display" data-i18n="employeeMgmtTitle">Employee Management</h1>
+            <p class="muted mt-1" data-i18n="employeeMgmtSub">Add, edit and manage Gram Panchayat staff.</p>
           </div>
-          <button onclick="openEmployeeModal()" class="px-5 py-3 bg-green-700 hover:bg-green-800 text-white rounded-xl font-bold shadow-lg shadow-green-700/20">+ <span data-i18n="addEmployeeBtn">Add Employee</span></button>
+          <button onclick="openEmployeeModal()" class="px-5 py-3 bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-bold shadow-lg shadow-brand-700/20">+ <span data-i18n="addEmployeeBtn">Add Employee</span></button>
         </div>
 
-        <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-          <div class="p-4 border-b flex flex-col md:flex-row gap-3">
+        <div class="surface rounded-2xl border shadow-sm overflow-hidden">
+          <div class="p-4 border-b flex flex-col md:flex-row gap-3" style="border-color:var(--border)">
             <div class="relative flex-1">
               <input id="employeeSearch" oninput="renderEmployees()" data-i18n-placeholder="searchPlaceholder"
-                class="w-full px-4 py-3 pl-10 border rounded-xl outline-none focus:ring-2 focus:ring-green-500" placeholder="Search employee, department or role...">
-              <span class="absolute left-3 top-3.5 text-slate-400">🔍</span>
+                class="w-full px-4 py-3 pl-10 border bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-brand-500" style="border-color:var(--border)" placeholder="Search employee, department or role...">
+              <span class="absolute left-3 top-3.5 muted">🔍</span>
             </div>
-            <select id="employeeDepartmentFilter" onchange="renderEmployees()" class="deptSelect px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-green-500"></select>
+            <select id="employeeDepartmentFilter" onchange="renderEmployees()" class="deptSelect px-4 py-3 border bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-brand-500" style="border-color:var(--border)"></select>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead><tr class="text-left bg-slate-50 text-slate-500 border-b">
+              <thead><tr class="text-left bg-brand-50/60 dark:bg-white/5 muted border-b" style="border-color:var(--border)">
                 <th class="p-4" data-i18n="tableEmployee">Employee</th><th data-i18n="tableDepartment">Department</th><th data-i18n="tableRole">Role</th><th data-i18n="tableContact">Contact</th><th data-i18n="tableStatus">Status</th><th class="pr-4" data-i18n="tableAction">Action</th>
               </tr></thead>
               <tbody id="employeeTable"></tbody>
@@ -257,29 +314,31 @@
       <!-- ATTENDANCE -->
       <section id="attendance" class="page hidden">
         <div class="mb-6">
-          <h1 class="text-2xl sm:text-3xl font-black" data-i18n="markAttendanceTitle">Mark Attendance</h1>
-          <p class="text-slate-500 mt-1" data-i18n="markAttendanceSub">Record daily employee attendance.</p>
+          <h1 class="text-2xl sm:text-3xl font-black font-display" data-i18n="markAttendanceTitle">Mark Attendance</h1>
+          <p class="muted mt-1" data-i18n="markAttendanceSub">Record daily employee attendance.</p>
         </div>
 
-        <div class="bg-white rounded-2xl border shadow-sm p-5">
+        <div id="holidayBanner" class="hidden mb-4 p-4 rounded-xl bg-marigold-500/10 border border-marigold-500/30 text-marigold-700 dark:text-marigold-300 font-semibold text-sm">🎉 <span id="holidayBannerText"></span></div>
+
+        <div class="surface rounded-2xl border shadow-sm p-5">
           <div class="grid md:grid-cols-3 gap-4 mb-6">
             <div>
               <label class="text-sm font-semibold" data-i18n="attendanceDateLabel">Attendance Date</label>
-              <input id="attDate" type="date" onchange="renderAttendance()" class="w-full mt-2 px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-green-500">
+              <input id="attDate" type="date" onchange="renderAttendance()" class="w-full mt-2 px-4 py-3 border bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-brand-500" style="border-color:var(--border)">
             </div>
             <div>
               <label class="text-sm font-semibold" data-i18n="departmentLabel">Department</label>
-              <select id="attendanceDepartment" onchange="renderAttendance()" class="deptSelect w-full mt-2 px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-green-500"></select>
+              <select id="attendanceDepartment" onchange="renderAttendance()" class="deptSelect w-full mt-2 px-4 py-3 border bg-transparent rounded-xl outline-none focus:ring-2 focus:ring-brand-500" style="border-color:var(--border)"></select>
             </div>
             <div>
               <label class="text-sm font-semibold" data-i18n="quickActionLabel">Quick Action</label>
-              <button onclick="markAllPresent()" class="w-full mt-2 px-4 py-3 border border-green-200 text-green-700 hover:bg-green-50 rounded-xl font-semibold">✓ <span data-i18n="markAllPresentBtn">Mark All Present</span></button>
+              <button onclick="markAllPresent()" class="w-full mt-2 px-4 py-3 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-xl font-semibold">✓ <span data-i18n="markAllPresentBtn">Mark All Present</span></button>
             </div>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead><tr class="border-b text-left text-slate-500 bg-slate-50">
+              <thead><tr class="border-b text-left muted bg-brand-50/60 dark:bg-white/5" style="border-color:var(--border)">
                 <th class="p-4" data-i18n="tableEmployee">Employee</th><th data-i18n="tableDepartment">Department</th><th data-i18n="tableRole">Role</th><th data-i18n="tableStatus">Status</th>
               </tr></thead>
               <tbody id="attendanceTable"></tbody>
@@ -287,47 +346,98 @@
           </div>
 
           <div class="mt-6 flex flex-col sm:flex-row justify-between gap-3">
-            <div id="attendanceSummary" class="text-sm text-slate-500"></div>
-            <button onclick="saveAttendance()" class="px-6 py-3 bg-green-700 hover:bg-green-800 text-white rounded-xl font-bold" data-i18n="saveAttendanceBtn">Save Attendance</button>
+            <div id="attendanceSummary" class="text-sm muted"></div>
+            <button onclick="saveAttendance()" class="px-6 py-3 bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-bold" data-i18n="saveAttendanceBtn">Save Attendance</button>
           </div>
         </div>
+      </section>
+
+
+      <!-- LEAVE -->
+      <section id="leave" class="page hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-black font-display" data-i18n="leaveManagementTitle">Leave Management</h1>
+            <p class="muted mt-1" data-i18n="leaveManagementSub">Apply for and approve staff leave requests.</p>
+          </div>
+          <button onclick="openLeaveModal()" class="px-5 py-3 bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-bold shadow-lg shadow-brand-700/20">+ <span data-i18n="applyLeaveBtn">Apply Leave</span></button>
+        </div>
+
+        <div class="surface rounded-2xl border shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead><tr class="text-left bg-brand-50/60 dark:bg-white/5 muted border-b" style="border-color:var(--border)">
+                <th class="p-4" data-i18n="tableEmployee">Employee</th><th data-i18n="leaveTableFrom">From</th><th data-i18n="leaveTableTo">To</th><th data-i18n="leaveTableReason">Reason</th><th data-i18n="tableStatus">Status</th><th class="pr-4" data-i18n="tableAction">Action</th>
+              </tr></thead>
+              <tbody id="leaveTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- HOLIDAYS -->
+      <section id="holidays" class="page hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-black font-display" data-i18n="holidaysTitle">Holiday Calendar</h1>
+            <p class="muted mt-1" data-i18n="holidaysSub">Manage official Gram Panchayat holidays.</p>
+          </div>
+          <button onclick="openHolidayModal()" class="px-5 py-3 bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-bold shadow-lg shadow-brand-700/20">+ <span data-i18n="addHolidayBtn">Add Holiday</span></button>
+        </div>
+
+        <div id="holidayList" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
       </section>
 
 
       <!-- REPORTS -->
       <section id="reports" class="page hidden">
         <div class="mb-6">
-          <h1 class="text-2xl sm:text-3xl font-black" data-i18n="reportsTitle">Attendance Reports</h1>
-          <p class="text-slate-500 mt-1" data-i18n="reportsSub">View monthly attendance performance.</p>
+          <h1 class="text-2xl sm:text-3xl font-black font-display" data-i18n="reportsTitle">Attendance Reports</h1>
+          <p class="muted mt-1" data-i18n="reportsSub">View monthly attendance performance.</p>
         </div>
 
-        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-          <div class="bg-white p-5 rounded-2xl border"><p class="text-sm text-slate-500" data-i18n="attendanceRate">Attendance Rate</p><p id="reportRate" class="text-3xl font-black text-green-700 mt-1">0%</p></div>
-          <div class="bg-white p-5 rounded-2xl border"><p class="text-sm text-slate-500" data-i18n="workingDaysLabel">Working Days</p><p id="workingDays" class="text-3xl font-black mt-1">0</p></div>
-          <div class="bg-white p-5 rounded-2xl border"><p class="text-sm text-slate-500" data-i18n="totalRecordsLabel">Total Records</p><p id="recordCount" class="text-3xl font-black mt-1">0</p></div>
-          <div class="bg-white p-5 rounded-2xl border"><p class="text-sm text-slate-500" data-i18n="presentRecordsLabel">Present Records</p><p id="reportPresent" class="text-3xl font-black text-green-700 mt-1">0</p></div>
+        <div class="grid lg:grid-cols-3 gap-4 mb-6">
+          <div class="surface p-5 rounded-2xl border flex items-center gap-5">
+            <div class="ring-wrap" id="rateRing"><div class="ring-inner"><span id="reportRate" class="text-2xl font-black font-display">0%</span></div></div>
+            <div>
+              <p class="text-sm muted" data-i18n="attendanceRate">Attendance Rate</p>
+              <p class="text-xs muted mt-1" data-i18n="attendanceRateGaugeSub">Present vs total marked</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-4 lg:col-span-2">
+            <div class="surface p-5 rounded-2xl border ledger-bg"><p class="text-sm muted" data-i18n="workingDaysLabel">Working Days</p><p id="workingDays" class="text-3xl font-black mt-1 font-display">0</p></div>
+            <div class="surface p-5 rounded-2xl border ledger-bg"><p class="text-sm muted" data-i18n="totalRecordsLabel">Total Records</p><p id="recordCount" class="text-3xl font-black mt-1 font-display">0</p></div>
+            <div class="surface p-5 rounded-2xl border ledger-bg"><p class="text-sm muted" data-i18n="presentRecordsLabel">Present Records</p><p id="reportPresent" class="text-3xl font-black text-brand-700 dark:text-brand-400 mt-1 font-display">0</p></div>
+          </div>
         </div>
 
-        <div id="printArea" class="bg-white rounded-2xl border shadow-sm p-5">
+        <div class="surface rounded-2xl border shadow-sm p-5 mb-6 no-print">
+          <h3 class="font-black" data-i18n="monthlyTrendTitle">Monthly Trend</h3>
+          <p class="text-sm muted mb-3" data-i18n="monthlyTrendSub">Daily present / absent / leave counts this month</p>
+          <div class="chart-box"><canvas id="monthlyTrendChart"></canvas></div>
+        </div>
+
+        <div id="printArea" class="surface rounded-2xl border shadow-sm p-5">
           <div class="flex flex-col lg:flex-row gap-3 justify-between mb-5 no-print">
             <div class="flex flex-col sm:flex-row gap-3">
-              <input id="reportMonth" type="month" onchange="renderReports()" class="px-4 py-2.5 border rounded-xl">
-              <select id="reportEmployee" onchange="renderReports()" class="px-4 py-2.5 border rounded-xl"><option value="" data-i18n="allEmployees">All Employees</option></select>
+              <input id="reportMonth" type="month" onchange="renderReports()" class="px-4 py-2.5 border bg-transparent rounded-xl" style="border-color:var(--border)">
+              <select id="reportEmployee" onchange="renderReports()" class="px-4 py-2.5 border bg-transparent rounded-xl" style="border-color:var(--border)"><option value="" data-i18n="allEmployees">All Employees</option></select>
             </div>
             <div class="flex gap-2">
-              <button onclick="exportCSV()" class="px-4 py-2.5 border rounded-xl font-semibold hover:bg-slate-50">⬇ <span data-i18n="exportCSVBtn">Export CSV</span></button>
-              <button onclick="window.print()" class="px-4 py-2.5 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800">🖨 <span data-i18n="printBtn">Print</span></button>
+              <button onclick="exportCSV()" class="px-4 py-2.5 border rounded-xl font-semibold hover:bg-brand-50 dark:hover:bg-white/5" style="border-color:var(--border)">⬇ <span data-i18n="exportCSVBtn">Export CSV</span></button>
+              <button onclick="window.print()" class="px-4 py-2.5 bg-brand-700 text-white rounded-xl font-semibold hover:bg-brand-800">🖨 <span data-i18n="printBtn">Print</span></button>
             </div>
           </div>
 
           <div class="mb-5">
-            <h2 class="text-xl font-black" data-i18n="monthlyReportTitle">Monthly Employee Attendance</h2>
-            <p id="reportSubtitle" class="text-sm text-slate-500"></p>
+            <h2 class="text-xl font-black font-display" data-i18n="monthlyReportTitle">Monthly Employee Attendance</h2>
+            <p id="reportSubtitle" class="text-sm muted"></p>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead><tr class="bg-slate-50 text-left text-slate-500 border-b">
+              <thead><tr class="bg-brand-50/60 dark:bg-white/5 text-left muted border-b" style="border-color:var(--border)">
                 <th class="p-4" data-i18n="tableEmployee">Employee</th><th data-i18n="tableDepartment">Department</th><th data-i18n="reportTablePresent">Present</th><th data-i18n="reportTableAbsent">Absent</th><th data-i18n="reportTableLeave">Leave</th><th data-i18n="reportTablePercentage">Attendance %</th>
               </tr></thead>
               <tbody id="reportTable"></tbody>
@@ -343,13 +453,13 @@
 
 <!-- EMPLOYEE MODAL -->
 <div id="employeeModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4">
-  <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl">
-    <div class="p-6 border-b flex justify-between items-center">
+  <div class="surface w-full max-w-lg rounded-3xl shadow-2xl">
+    <div class="p-6 border-b flex justify-between items-center" style="border-color:var(--border)">
       <div>
-        <h2 id="modalTitle" class="text-xl font-black" data-i18n="modalAddTitle">Add Employee</h2>
-        <p class="text-sm text-slate-500" data-i18n="modalSub">Enter employee details</p>
+        <h2 id="modalTitle" class="text-xl font-black font-display" data-i18n="modalAddTitle">Add Employee</h2>
+        <p class="text-sm muted" data-i18n="modalSub">Enter employee details</p>
       </div>
-      <button onclick="closeEmployeeModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600">✕</button>
+      <button onclick="closeEmployeeModal()" class="w-9 h-9 rounded-xl bg-brand-50 dark:bg-white/5 hover:bg-red-50 hover:text-red-600">✕</button>
     </div>
 
     <form onsubmit="event.preventDefault(); saveEmployee()" class="p-6">
@@ -357,24 +467,86 @@
       <div class="grid sm:grid-cols-2 gap-4">
         <div class="sm:col-span-2">
           <label class="text-sm font-semibold" data-i18n="fullNameLabel">Full Name *</label>
-          <input id="employeeName" required data-i18n-placeholder="fullNamePlaceholder" class="w-full mt-2 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none" placeholder="Enter full name">
+          <input id="employeeName" required data-i18n-placeholder="fullNamePlaceholder" class="w-full mt-2 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)" placeholder="Enter full name">
         </div>
         <div>
           <label class="text-sm font-semibold" data-i18n="departmentRequiredLabel">Department *</label>
-          <select id="employeeDept" required class="deptSelectForm w-full mt-2 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"></select>
+          <select id="employeeDept" required class="deptSelectForm w-full mt-2 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)"></select>
         </div>
         <div>
           <label class="text-sm font-semibold" data-i18n="roleRequiredLabel">Role *</label>
-          <input id="employeeRole" required data-i18n-placeholder="rolePlaceholder" class="w-full mt-2 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none" placeholder="e.g. Clerk">
+          <input id="employeeRole" required data-i18n-placeholder="rolePlaceholder" class="w-full mt-2 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)" placeholder="e.g. Clerk">
         </div>
         <div class="sm:col-span-2">
           <label class="text-sm font-semibold" data-i18n="phoneRequiredLabel">Phone *</label>
-          <input id="employeePhone" required data-i18n-placeholder="phonePlaceholder" class="w-full mt-2 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none" placeholder="98765 43210">
+          <input id="employeePhone" required data-i18n-placeholder="phonePlaceholder" class="w-full mt-2 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)" placeholder="98765 43210">
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-7">
-        <button type="button" onclick="closeEmployeeModal()" class="px-5 py-3 rounded-xl border font-semibold" data-i18n="cancelBtn">Cancel</button>
-        <button type="submit" class="px-6 py-3 rounded-xl bg-green-700 hover:bg-green-800 text-white font-bold" data-i18n="saveEmployeeBtn">Save Employee</button>
+        <button type="button" onclick="closeEmployeeModal()" class="px-5 py-3 rounded-xl border font-semibold" style="border-color:var(--border)" data-i18n="cancelBtn">Cancel</button>
+        <button type="submit" class="px-6 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold" data-i18n="saveEmployeeBtn">Save Employee</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- LEAVE MODAL -->
+<div id="leaveModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4">
+  <div class="surface w-full max-w-lg rounded-3xl shadow-2xl">
+    <div class="p-6 border-b flex justify-between items-center" style="border-color:var(--border)">
+      <div>
+        <h2 class="text-xl font-black font-display" data-i18n="modalApplyLeaveTitle">Apply Leave</h2>
+        <p class="text-sm muted" data-i18n="modalSub">Enter employee details</p>
+      </div>
+      <button onclick="closeLeaveModal()" class="w-9 h-9 rounded-xl bg-brand-50 dark:bg-white/5 hover:bg-red-50 hover:text-red-600">✕</button>
+    </div>
+    <form onsubmit="event.preventDefault(); saveLeave()" class="p-6">
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <label class="text-sm font-semibold" data-i18n="tableEmployee">Employee</label>
+          <select id="leaveEmployee" required class="w-full mt-2 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)"></select>
+        </div>
+        <div>
+          <label class="text-sm font-semibold" data-i18n="leaveFromLabel">From Date</label>
+          <input id="leaveFrom" type="date" required class="w-full mt-2 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)">
+        </div>
+        <div>
+          <label class="text-sm font-semibold" data-i18n="leaveToLabel">To Date</label>
+          <input id="leaveTo" type="date" required class="w-full mt-2 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="text-sm font-semibold" data-i18n="leaveReasonLabel">Reason</label>
+          <textarea id="leaveReason" required rows="3" data-i18n-placeholder="reasonPlaceholder" class="w-full mt-2 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)" placeholder="Reason for leave"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-7">
+        <button type="button" onclick="closeLeaveModal()" class="px-5 py-3 rounded-xl border font-semibold" style="border-color:var(--border)" data-i18n="cancelBtn">Cancel</button>
+        <button type="submit" class="px-6 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold" data-i18n="applyLeaveBtn">Apply Leave</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- HOLIDAY MODAL -->
+<div id="holidayModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4">
+  <div class="surface w-full max-w-md rounded-3xl shadow-2xl">
+    <div class="p-6 border-b flex justify-between items-center" style="border-color:var(--border)">
+      <div>
+        <h2 class="text-xl font-black font-display" data-i18n="addHolidayBtn">Add Holiday</h2>
+        <p class="text-sm muted" data-i18n="modalSub">Enter employee details</p>
+      </div>
+      <button onclick="closeHolidayModal()" class="w-9 h-9 rounded-xl bg-brand-50 dark:bg-white/5 hover:bg-red-50 hover:text-red-600">✕</button>
+    </div>
+    <form onsubmit="event.preventDefault(); saveHoliday()" class="p-6">
+      <label class="text-sm font-semibold" data-i18n="holidayDateLabel">Date</label>
+      <input id="holidayDate" type="date" required class="w-full mt-2 mb-5 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)">
+      <label class="text-sm font-semibold" data-i18n="holidayNameLabel">Holiday Name</label>
+      <input id="holidayName" required data-i18n-placeholder="holidayNamePlaceholder" class="w-full mt-2 px-4 py-3 border bg-transparent rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" style="border-color:var(--border)" placeholder="e.g. Republic Day">
+      <div class="flex justify-end gap-3 mt-7">
+        <button type="button" onclick="closeHolidayModal()" class="px-5 py-3 rounded-xl border font-semibold" style="border-color:var(--border)" data-i18n="cancelBtn">Cancel</button>
+        <button type="submit" class="px-6 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold" data-i18n="addHolidayBtn">Add Holiday</button>
       </div>
     </form>
   </div>
@@ -383,12 +555,12 @@
 
 <!-- DELETE MODAL -->
 <div id="deleteModal" class="hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm items-center justify-center p-4">
-  <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-7 text-center">
-    <div class="w-14 h-14 mx-auto rounded-full bg-red-100 text-red-600 grid place-items-center text-xl">⚠</div>
-    <h2 class="text-xl font-black mt-4" data-i18n="deleteConfirmTitle">Delete Employee?</h2>
-    <p class="text-sm text-slate-500 mt-2" data-i18n="deleteConfirmSub">This employee and their attendance records will be removed.</p>
+  <div class="surface w-full max-w-sm rounded-3xl shadow-2xl p-7 text-center">
+    <div class="w-14 h-14 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 grid place-items-center text-xl">⚠</div>
+    <h2 class="text-xl font-black mt-4 font-display" data-i18n="deleteConfirmTitle">Delete Employee?</h2>
+    <p class="text-sm muted mt-2" data-i18n="deleteConfirmSub">This employee and their attendance records will be removed.</p>
     <div class="flex gap-3 mt-6">
-      <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl border font-semibold" data-i18n="cancelBtn">Cancel</button>
+      <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl border font-semibold" style="border-color:var(--border)" data-i18n="cancelBtn">Cancel</button>
       <button onclick="confirmDelete()" class="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold" data-i18n="deleteBtnConfirm">Delete</button>
     </div>
   </div>
@@ -412,10 +584,12 @@ const translations = {
     usernameLabel: "Username", usernamePlaceholder: "Enter username",
     passwordLabel: "Password", passwordPlaceholder: "Enter password",
     loginBtn: "Login", demoLoginNote: "Demo Login:",
-    navDashboard: "Dashboard", navEmployees: "Employees", navAttendance: "Attendance", navReports: "Reports", logout: "Logout",
-    adminStaff: "Admin Staff", administrator: "Administrator",
+    navDashboard: "Dashboard", navEmployees: "Employees", navAttendance: "Attendance", navLeave: "Leave", navHolidays: "Holidays", navReports: "Reports", logout: "Logout",
+    adminStaff: "Admin Staff", administrator: "Administrator", darkModeToggle: "Dark Mode",
     goodMorning: "Good Morning, Admin", dashboardSub: "Here's today's attendance overview.",
     statTotalEmployees: "Total Employees", statPresentToday: "Present Today", statAbsentToday: "Absent Today", statOnLeave: "On Leave",
+    weeklyTrendTitle: "Last 7 Days Trend", weeklyTrendSub: "Present / Absent / Leave over the last week",
+    deptDistributionTitle: "Today's Department Split", deptDistributionSub: "Present staff by department",
     todaysAttendance: "Today's Attendance", todaysAttendanceSub: "Current attendance status", markAttendanceBtn: "Mark Attendance",
     tableEmployee: "Employee", tableDepartment: "Department", tableRole: "Role", tableStatus: "Status", tableContact: "Contact", tableAction: "Action",
     employeeMgmtTitle: "Employee Management", employeeMgmtSub: "Add, edit and manage Gram Panchayat staff.", addEmployeeBtn: "Add Employee",
@@ -431,11 +605,23 @@ const translations = {
     deleteConfirmTitle: "Delete Employee?", deleteConfirmSub: "This employee and their attendance records will be removed.", deleteBtnConfirm: "Delete",
     markAttendanceTitle: "Mark Attendance", markAttendanceSub: "Record daily employee attendance.",
     attendanceDateLabel: "Attendance Date", quickActionLabel: "Quick Action", markAllPresentBtn: "Mark All Present",
-    saveAttendanceBtn: "Save Attendance",
+    saveAttendanceBtn: "Save Attendance", todayIsHoliday: "Today is a holiday",
     present: "Present", absent: "Absent", leave: "Leave",
     summaryPresent: "Present", summaryAbsent: "Absent", summaryLeave: "Leave",
+    leaveManagementTitle: "Leave Management", leaveManagementSub: "Apply for and approve staff leave requests.",
+    applyLeaveBtn: "Apply Leave", leaveTableFrom: "From", leaveTableTo: "To", leaveTableReason: "Reason",
+    leaveStatusPending: "Pending", leaveStatusApproved: "Approved", leaveStatusRejected: "Rejected",
+    approveBtn: "Approve", rejectBtn: "Reject", modalApplyLeaveTitle: "Apply Leave",
+    leaveFromLabel: "From Date", leaveToLabel: "To Date", leaveReasonLabel: "Reason", reasonPlaceholder: "Reason for leave",
+    noLeaveRequests: "No leave requests yet.",
+    toastLeaveApplied: "Leave request submitted!", toastLeaveApproved: "Leave approved!", toastLeaveRejected: "Leave rejected.",
+    holidaysTitle: "Holiday Calendar", holidaysSub: "Manage official Gram Panchayat holidays.", addHolidayBtn: "Add Holiday",
+    holidayDateLabel: "Date", holidayNameLabel: "Holiday Name", holidayNamePlaceholder: "e.g. Republic Day",
+    noHolidays: "No holidays added yet.", toastHolidayAdded: "Holiday added!", toastHolidayDeleted: "Holiday removed.",
     reportsTitle: "Attendance Reports", reportsSub: "View monthly attendance performance.",
-    attendanceRate: "Attendance Rate", workingDaysLabel: "Working Days", totalRecordsLabel: "Total Records", presentRecordsLabel: "Present Records",
+    attendanceRate: "Attendance Rate", attendanceRateGaugeSub: "Present vs total marked",
+    workingDaysLabel: "Working Days", totalRecordsLabel: "Total Records", presentRecordsLabel: "Present Records",
+    monthlyTrendTitle: "Monthly Trend", monthlyTrendSub: "Daily present / absent / leave counts this month",
     allEmployees: "All Employees", exportCSVBtn: "Export CSV", printBtn: "Print", monthlyReportTitle: "Monthly Employee Attendance",
     reportTablePresent: "Present", reportTableAbsent: "Absent", reportTableLeave: "Leave", reportTablePercentage: "Attendance %",
     noReportData: "No report data available.",
@@ -453,10 +639,12 @@ const translations = {
     usernameLabel: "उपयोगकर्ता नाम", usernamePlaceholder: "उपयोगकर्ता नाम दर्ज करें",
     passwordLabel: "पासवर्ड", passwordPlaceholder: "पासवर्ड दर्ज करें",
     loginBtn: "लॉगिन करें", demoLoginNote: "डेमो लॉगिन:",
-    navDashboard: "डैशबोर्ड", navEmployees: "कर्मचारी", navAttendance: "उपस्थिति", navReports: "रिपोर्ट", logout: "लॉगआउट",
-    adminStaff: "एडमिन स्टाफ", administrator: "प्रशासक",
+    navDashboard: "डैशबोर्ड", navEmployees: "कर्मचारी", navAttendance: "उपस्थिति", navLeave: "छुट्टी", navHolidays: "अवकाश", navReports: "रिपोर्ट", logout: "लॉगआउट",
+    adminStaff: "एडमिन स्टाफ", administrator: "प्रशासक", darkModeToggle: "डार्क मोड",
     goodMorning: "सुप्रभात, एडमिन", dashboardSub: "आज की उपस्थिति का सारांश यहाँ है।",
     statTotalEmployees: "कुल कर्मचारी", statPresentToday: "आज उपस्थित", statAbsentToday: "आज अनुपस्थित", statOnLeave: "छुट्टी पर",
+    weeklyTrendTitle: "पिछले 7 दिनों का रुझान", weeklyTrendSub: "पिछले सप्ताह उपस्थित / अनुपस्थित / छुट्टी",
+    deptDistributionTitle: "आज का विभागवार विवरण", deptDistributionSub: "विभाग अनुसार उपस्थित स्टाफ",
     todaysAttendance: "आज की उपस्थिति", todaysAttendanceSub: "वर्तमान उपस्थिति स्थिति", markAttendanceBtn: "उपस्थिति दर्ज करें",
     tableEmployee: "कर्मचारी", tableDepartment: "विभाग", tableRole: "पद", tableStatus: "स्थिति", tableContact: "संपर्क", tableAction: "कार्रवाई",
     employeeMgmtTitle: "कर्मचारी प्रबंधन", employeeMgmtSub: "ग्राम पंचायत स्टाफ जोड़ें, संपादित करें और प्रबंधित करें।", addEmployeeBtn: "कर्मचारी जोड़ें",
@@ -472,11 +660,23 @@ const translations = {
     deleteConfirmTitle: "कर्मचारी हटाएं?", deleteConfirmSub: "यह कर्मचारी और उसके उपस्थिति रिकॉर्ड हटा दिए जाएंगे।", deleteBtnConfirm: "हटाएं",
     markAttendanceTitle: "उपस्थिति दर्ज करें", markAttendanceSub: "दैनिक कर्मचारी उपस्थिति रिकॉर्ड करें।",
     attendanceDateLabel: "उपस्थिति तिथि", quickActionLabel: "त्वरित कार्रवाई", markAllPresentBtn: "सभी को उपस्थित करें",
-    saveAttendanceBtn: "उपस्थिति सहेजें",
+    saveAttendanceBtn: "उपस्थिति सहेजें", todayIsHoliday: "आज अवकाश है",
     present: "उपस्थित", absent: "अनुपस्थित", leave: "छुट्टी",
     summaryPresent: "उपस्थित", summaryAbsent: "अनुपस्थित", summaryLeave: "छुट्टी",
+    leaveManagementTitle: "छुट्टी प्रबंधन", leaveManagementSub: "स्टाफ की छुट्टी के लिए आवेदन करें और स्वीकृत करें।",
+    applyLeaveBtn: "छुट्टी हेतु आवेदन", leaveTableFrom: "से", leaveTableTo: "तक", leaveTableReason: "कारण",
+    leaveStatusPending: "लंबित", leaveStatusApproved: "स्वीकृत", leaveStatusRejected: "अस्वीकृत",
+    approveBtn: "स्वीकृत करें", rejectBtn: "अस्वीकृत करें", modalApplyLeaveTitle: "छुट्टी हेतु आवेदन",
+    leaveFromLabel: "से तिथि", leaveToLabel: "तक तिथि", leaveReasonLabel: "कारण", reasonPlaceholder: "छुट्टी का कारण",
+    noLeaveRequests: "अभी तक कोई छुट्टी आवेदन नहीं।",
+    toastLeaveApplied: "छुट्टी आवेदन जमा हुआ!", toastLeaveApproved: "छुट्टी स्वीकृत!", toastLeaveRejected: "छुट्टी अस्वीकृत की गई।",
+    holidaysTitle: "अवकाश कैलेंडर", holidaysSub: "आधिकारिक ग्राम पंचायत अवकाश प्रबंधित करें।", addHolidayBtn: "अवकाश जोड़ें",
+    holidayDateLabel: "तिथि", holidayNameLabel: "अवकाश का नाम", holidayNamePlaceholder: "जैसे गणतंत्र दिवस",
+    noHolidays: "अभी तक कोई अवकाश नहीं जोड़ा गया।", toastHolidayAdded: "अवकाश जोड़ा गया!", toastHolidayDeleted: "अवकाश हटाया गया।",
     reportsTitle: "उपस्थिति रिपोर्ट", reportsSub: "मासिक उपस्थिति प्रदर्शन देखें।",
-    attendanceRate: "उपस्थिति दर", workingDaysLabel: "कार्य दिवस", totalRecordsLabel: "कुल रिकॉर्ड", presentRecordsLabel: "उपस्थिति रिकॉर्ड",
+    attendanceRate: "उपस्थिति दर", attendanceRateGaugeSub: "कुल दर्ज में से उपस्थित",
+    workingDaysLabel: "कार्य दिवस", totalRecordsLabel: "कुल रिकॉर्ड", presentRecordsLabel: "उपस्थिति रिकॉर्ड",
+    monthlyTrendTitle: "मासिक रुझान", monthlyTrendSub: "इस माह प्रतिदिन उपस्थित / अनुपस्थित / छुट्टी संख्या",
     allEmployees: "सभी कर्मचारी", exportCSVBtn: "CSV निर्यात करें", printBtn: "प्रिंट करें", monthlyReportTitle: "मासिक कर्मचारी उपस्थिति",
     reportTablePresent: "उपस्थित", reportTableAbsent: "अनुपस्थित", reportTableLeave: "छुट्टी", reportTablePercentage: "उपस्थिति %",
     noReportData: "कोई रिपोर्ट डेटा उपलब्ध नहीं है।",
@@ -494,10 +694,12 @@ const translations = {
     usernameLabel: "वापरकर्तानाव", usernamePlaceholder: "वापरकर्तानाव टाका",
     passwordLabel: "पासवर्ड", passwordPlaceholder: "पासवर्ड टाका",
     loginBtn: "लॉगिन करा", demoLoginNote: "डेमो लॉगिन:",
-    navDashboard: "डॅशबोर्ड", navEmployees: "कर्मचारी", navAttendance: "हजेरी", navReports: "अहवाल", logout: "लॉगआउट",
-    adminStaff: "प्रशासक स्टाफ", administrator: "प्रशासक",
+    navDashboard: "डॅशबोर्ड", navEmployees: "कर्मचारी", navAttendance: "हजेरी", navLeave: "रजा", navHolidays: "सुट्ट्या", navReports: "अहवाल", logout: "लॉगआउट",
+    adminStaff: "प्रशासक स्टाफ", administrator: "प्रशासक", darkModeToggle: "डार्क मोड",
     goodMorning: "सुप्रभात, प्रशासक", dashboardSub: "आजच्या हजेरीचा आढावा येथे आहे.",
     statTotalEmployees: "एकूण कर्मचारी", statPresentToday: "आज हजर", statAbsentToday: "आज गैरहजर", statOnLeave: "रजेवर",
+    weeklyTrendTitle: "मागील 7 दिवसांचा कल", weeklyTrendSub: "मागील आठवड्यातील हजर / गैरहजर / रजा",
+    deptDistributionTitle: "आजची विभागनिहाय विभागणी", deptDistributionSub: "विभागानुसार हजर कर्मचारी",
     todaysAttendance: "आजची हजेरी", todaysAttendanceSub: "सद्य हजेरी स्थिती", markAttendanceBtn: "हजेरी नोंदवा",
     tableEmployee: "कर्मचारी", tableDepartment: "विभाग", tableRole: "पद", tableStatus: "स्थिती", tableContact: "संपर्क", tableAction: "कृती",
     employeeMgmtTitle: "कर्मचारी व्यवस्थापन", employeeMgmtSub: "ग्रामपंचायत स्टाफ जोडा, संपादित करा आणि व्यवस्थापित करा.", addEmployeeBtn: "कर्मचारी जोडा",
@@ -513,11 +715,23 @@ const translations = {
     deleteConfirmTitle: "कर्मचारी काढायचा?", deleteConfirmSub: "हा कर्मचारी आणि त्याचे हजेरी रेकॉर्ड काढले जातील.", deleteBtnConfirm: "काढा",
     markAttendanceTitle: "हजेरी नोंदवा", markAttendanceSub: "दैनंदिन कर्मचारी हजेरी नोंदवा.",
     attendanceDateLabel: "हजेरी तारीख", quickActionLabel: "त्वरित कृती", markAllPresentBtn: "सर्वांना हजर करा",
-    saveAttendanceBtn: "हजेरी जतन करा",
+    saveAttendanceBtn: "हजेरी जतन करा", todayIsHoliday: "आज सुट्टी आहे",
     present: "हजर", absent: "गैरहजर", leave: "रजा",
     summaryPresent: "हजर", summaryAbsent: "गैरहजर", summaryLeave: "रजा",
+    leaveManagementTitle: "रजा व्यवस्थापन", leaveManagementSub: "कर्मचाऱ्यांच्या रजेसाठी अर्ज करा आणि मंजूर करा.",
+    applyLeaveBtn: "रजेसाठी अर्ज करा", leaveTableFrom: "पासून", leaveTableTo: "पर्यंत", leaveTableReason: "कारण",
+    leaveStatusPending: "प्रलंबित", leaveStatusApproved: "मंजूर", leaveStatusRejected: "नाकारली",
+    approveBtn: "मंजूर करा", rejectBtn: "नाकारा", modalApplyLeaveTitle: "रजेसाठी अर्ज करा",
+    leaveFromLabel: "पासून तारीख", leaveToLabel: "पर्यंत तारीख", leaveReasonLabel: "कारण", reasonPlaceholder: "रजेचे कारण",
+    noLeaveRequests: "अद्याप कोणताही रजा अर्ज नाही.",
+    toastLeaveApplied: "रजा अर्ज सादर झाला!", toastLeaveApproved: "रजा मंजूर झाली!", toastLeaveRejected: "रजा नाकारली गेली.",
+    holidaysTitle: "सुट्टी दिनदर्शिका", holidaysSub: "अधिकृत ग्रामपंचायत सुट्ट्या व्यवस्थापित करा.", addHolidayBtn: "सुट्टी जोडा",
+    holidayDateLabel: "तारीख", holidayNameLabel: "सुट्टीचे नाव", holidayNamePlaceholder: "उदा. प्रजासत्ताक दिन",
+    noHolidays: "अद्याप कोणतीही सुट्टी जोडलेली नाही.", toastHolidayAdded: "सुट्टी जोडली!", toastHolidayDeleted: "सुट्टी काढली.",
     reportsTitle: "हजेरी अहवाल", reportsSub: "मासिक हजेरी कामगिरी पहा.",
-    attendanceRate: "हजेरी दर", workingDaysLabel: "कामाचे दिवस", totalRecordsLabel: "एकूण नोंदी", presentRecordsLabel: "हजर नोंदी",
+    attendanceRate: "हजेरी दर", attendanceRateGaugeSub: "एकूण नोंदींपैकी हजर",
+    workingDaysLabel: "कामाचे दिवस", totalRecordsLabel: "एकूण नोंदी", presentRecordsLabel: "हजर नोंदी",
+    monthlyTrendTitle: "मासिक कल", monthlyTrendSub: "या महिन्यातील दैनंदिन हजर / गैरहजर / रजा संख्या",
     allEmployees: "सर्व कर्मचारी", exportCSVBtn: "CSV निर्यात करा", printBtn: "प्रिंट करा", monthlyReportTitle: "मासिक कर्मचारी हजेरी",
     reportTablePresent: "हजर", reportTableAbsent: "गैरहजर", reportTableLeave: "रजा", reportTablePercentage: "हजेरी %",
     noReportData: "कोणताही अहवाल डेटा उपलब्ध नाही.",
@@ -551,71 +765,96 @@ const defaultEmployees = [
   { id: 8, name: "Pooja Singh", dept: "Administration", role: "Assistant", phone: "97999 66778" }
 ];
 
+const defaultHolidays = [
+  { id: 1, date: "2026-01-26", name: "Republic Day" },
+  { id: 2, date: "2026-08-15", name: "Independence Day" },
+  { id: 3, date: "2026-10-02", name: "Gandhi Jayanti" }
+];
+
+const defaultLeaves = [
+  { id: 1, employeeId: 1, from: "2026-09-01", to: "2026-09-02", reason: "Family function", status: "Pending" }
+];
+
 let employees = [];
 let attendance = {};
+let holidays = [];
+let leaveRequests = [];
 let deleteEmployeeId = null;
 let loggedIn = false;
 let storageAvailable = false;
+let darkMode = false;
+
+let weeklyTrendChartInstance = null;
+let deptDonutChartInstance = null;
+let monthlyTrendChartInstance = null;
 
 /* =========================================================
    STORAGE (persistent, replaces localStorage which does not
    work inside Claude.ai artifacts)
-   NOTE: employees & attendance are saved as SHARED data, so
-   every person who opens this artifact sees the same staff
-   list and attendance records. Language preference and login
-   state are saved per-person only.
+   NOTE: employees, attendance, holidays & leaveRequests are
+   saved as SHARED data, so every person who opens this
+   artifact sees the same records. Language and dark-mode
+   preference and login state are saved per-person only.
 ========================================================= */
 async function loadAll() {
   try {
     if (!window.storage) throw new Error("no storage");
     storageAvailable = true;
 
-    const [empRes, attRes, langRes, sessionRes] = await Promise.allSettled([
+    const [empRes, attRes, holRes, leaveRes, langRes, sessionRes, darkRes] = await Promise.allSettled([
       window.storage.get("employees", true),
       window.storage.get("attendance", true),
+      window.storage.get("holidays", true),
+      window.storage.get("leaveRequests", true),
       window.storage.get("language", false),
-      window.storage.get("session", false)
+      window.storage.get("session", false),
+      window.storage.get("darkMode", false)
     ]);
 
     employees = (empRes.status === "fulfilled" && empRes.value) ? JSON.parse(empRes.value.value) : defaultEmployees;
     attendance = (attRes.status === "fulfilled" && attRes.value) ? JSON.parse(attRes.value.value) : {};
+    holidays = (holRes.status === "fulfilled" && holRes.value) ? JSON.parse(holRes.value.value) : defaultHolidays;
+    leaveRequests = (leaveRes.status === "fulfilled" && leaveRes.value) ? JSON.parse(leaveRes.value.value) : defaultLeaves;
     lang = (langRes.status === "fulfilled" && langRes.value) ? langRes.value.value : "en";
     loggedIn = (sessionRes.status === "fulfilled" && sessionRes.value) ? sessionRes.value.value === "true" : false;
+    darkMode = (darkRes.status === "fulfilled" && darkRes.value) ? darkRes.value.value === "true" : false;
 
-    if (empRes.status !== "fulfilled" || !empRes.value) {
-      await window.storage.set("employees", JSON.stringify(defaultEmployees), true);
-    }
+    if (empRes.status !== "fulfilled" || !empRes.value) await window.storage.set("employees", JSON.stringify(defaultEmployees), true);
+    if (holRes.status !== "fulfilled" || !holRes.value) await window.storage.set("holidays", JSON.stringify(defaultHolidays), true);
+    if (leaveRes.status !== "fulfilled" || !leaveRes.value) await window.storage.set("leaveRequests", JSON.stringify(defaultLeaves), true);
   } catch (e) {
     storageAvailable = false;
     employees = defaultEmployees;
     attendance = {};
+    holidays = defaultHolidays;
+    leaveRequests = defaultLeaves;
     lang = "en";
     loggedIn = false;
+    darkMode = false;
   }
 }
 
-async function persistEmployees() {
-  if (!storageAvailable) return;
-  try { await window.storage.set("employees", JSON.stringify(employees), true); }
-  catch (e) { console.error("Storage error (employees):", e); }
-}
+async function persistEmployees() { if (storageAvailable) { try { await window.storage.set("employees", JSON.stringify(employees), true); } catch(e){ console.error(e); } } }
+async function persistAttendance() { if (storageAvailable) { try { await window.storage.set("attendance", JSON.stringify(attendance), true); } catch(e){ console.error(e); } } }
+async function persistHolidays() { if (storageAvailable) { try { await window.storage.set("holidays", JSON.stringify(holidays), true); } catch(e){ console.error(e); } } }
+async function persistLeaves() { if (storageAvailable) { try { await window.storage.set("leaveRequests", JSON.stringify(leaveRequests), true); } catch(e){ console.error(e); } } }
+async function persistLanguage() { if (storageAvailable) { try { await window.storage.set("language", lang, false); } catch(e){ console.error(e); } } }
+async function persistSession(value) { if (storageAvailable) { try { await window.storage.set("session", String(value), false); } catch(e){ console.error(e); } } }
+async function persistDarkMode() { if (storageAvailable) { try { await window.storage.set("darkMode", String(darkMode), false); } catch(e){ console.error(e); } } }
 
-async function persistAttendance() {
-  if (!storageAvailable) return;
-  try { await window.storage.set("attendance", JSON.stringify(attendance), true); }
-  catch (e) { console.error("Storage error (attendance):", e); }
+/* =========================================================
+   DARK MODE
+========================================================= */
+function applyDarkMode() {
+  document.documentElement.classList.toggle("dark", darkMode);
+  const icon = darkMode ? "☀️" : "🌙";
+  ["darkIconLogin","darkIconSidebar","darkIconMobile"].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = icon; });
 }
-
-async function persistLanguage() {
-  if (!storageAvailable) return;
-  try { await window.storage.set("language", lang, false); }
-  catch (e) { console.error("Storage error (language):", e); }
-}
-
-async function persistSession(value) {
-  if (!storageAvailable) return;
-  try { await window.storage.set("session", String(value), false); }
-  catch (e) { console.error("Storage error (session):", e); }
+function toggleDarkMode() {
+  darkMode = !darkMode;
+  applyDarkMode();
+  persistDarkMode();
+  rebuildCharts();
 }
 
 /* =========================================================
@@ -627,6 +866,11 @@ function getToday() {
 }
 function formatDate(date) {
   return new Date(date + "T00:00:00").toLocaleDateString(t("dateLocale"), { day:"numeric", month:"long", year:"numeric" });
+}
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
 /* =========================================================
@@ -644,12 +888,14 @@ function setLanguage(newLang) {
     renderDashboard();
     renderEmployees();
     renderAttendance();
+    renderLeave();
+    renderHolidays();
     populateReportEmployees();
     renderReports();
-    const activePage = document.querySelector(".navBtn.bg-green-50");
-    const titles = { dashboard:"navDashboard", employees:"navEmployees", attendance:"navAttendance", reports:"navReports" };
+    const activePage = document.querySelector(".navBtn.bg-brand-50, .navBtn.active");
+    const titles = { dashboard:"navDashboard", employees:"navEmployees", attendance:"navAttendance", leave:"navLeave", holidays:"navHolidays", reports:"navReports" };
     const activeId = activePage ? activePage.dataset.page : "dashboard";
-    document.getElementById("pageTitle").textContent = t(titles[activeId]);
+    document.getElementById("pageTitle").textContent = t(titles[activeId] || "navDashboard");
   }
   persistLanguage();
 }
@@ -723,6 +969,8 @@ function init() {
   renderDashboard();
   renderEmployees();
   renderAttendance();
+  renderLeave();
+  renderHolidays();
   populateReportEmployees();
   renderReports();
 }
@@ -739,17 +987,19 @@ function showPage(id) {
   document.querySelectorAll(".page").forEach(page => page.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
 
-  const titles = { dashboard:"navDashboard", employees:"navEmployees", attendance:"navAttendance", reports:"navReports" };
+  const titles = { dashboard:"navDashboard", employees:"navEmployees", attendance:"navAttendance", leave:"navLeave", holidays:"navHolidays", reports:"navReports" };
   document.getElementById("pageTitle").textContent = t(titles[id]);
 
   document.querySelectorAll(".navBtn").forEach(btn => {
-    btn.classList.remove("bg-green-50", "text-green-700");
-    if (btn.dataset.page === id) btn.classList.add("bg-green-50", "text-green-700");
+    btn.classList.remove("bg-brand-50", "text-brand-700", "dark:bg-brand-900/30", "dark:text-brand-300", "active");
+    if (btn.dataset.page === id) btn.classList.add("bg-brand-50", "text-brand-700", "dark:bg-brand-900/30", "dark:text-brand-300", "active");
   });
 
   if (id === "dashboard") renderDashboard();
   if (id === "employees") renderEmployees();
   if (id === "attendance") renderAttendance();
+  if (id === "leave") renderLeave();
+  if (id === "holidays") renderHolidays();
   if (id === "reports") { populateReportEmployees(); renderReports(); }
 }
 
@@ -768,10 +1018,91 @@ function mobileNavigate(id) { closeMobileMenu(); showPage(id); }
 ========================================================= */
 function attendanceKey(employeeId, date) { return `${date}_${employeeId}`; }
 function getStatus(employeeId, date) { return attendance[attendanceKey(employeeId, date)] || "Absent"; }
+function isHoliday(date) { return holidays.some(h => h.date === date); }
+function holidayName(date) { const h = holidays.find(h => h.date === date); return h ? h.name : ""; }
 
 function badge(status) {
-  const classes = { Present:"bg-green-100 text-green-700", Absent:"bg-red-100 text-red-700", Leave:"bg-amber-100 text-amber-700" };
+  const classes = { Present:"bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300", Absent:"bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400", Leave:"bg-marigold-500/15 text-marigold-700 dark:text-marigold-300" };
   return `<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${classes[status]}">${statusLabel(status)}</span>`;
+}
+
+/* =========================================================
+   CHARTS
+========================================================= */
+function chartTextColor() { return darkMode ? "#c9d6cd" : "#5c6d61"; }
+function chartGridColor() { return darkMode ? "#28362f" : "#e4e7de"; }
+
+function rebuildCharts() {
+  if (!document.getElementById("app") || document.getElementById("app").classList.contains("hidden")) return;
+  renderDashboard();
+  renderReports();
+}
+
+function renderWeeklyTrendChart() {
+  const canvas = document.getElementById("weeklyTrendChart");
+  if (!canvas) return;
+  const labels = [], presentData = [], absentData = [], leaveData = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = addDays(getToday(), -i);
+    labels.push(new Date(date + "T00:00:00").toLocaleDateString(t("dateLocale"), { weekday:"short" }));
+    const statuses = employees.map(e => getStatus(e.id, date));
+    presentData.push(statuses.filter(s => s === "Present").length);
+    absentData.push(statuses.filter(s => s === "Absent").length);
+    leaveData.push(statuses.filter(s => s === "Leave").length);
+  }
+  if (weeklyTrendChartInstance) weeklyTrendChartInstance.destroy();
+  weeklyTrendChartInstance = new Chart(canvas, {
+    type: "line",
+    data: { labels, datasets: [
+      { label: t("present"), data: presentData, borderColor: "#15803d", backgroundColor: "rgba(21,128,61,.15)", tension:.35, fill:true },
+      { label: t("absent"), data: absentData, borderColor: "#dc2626", backgroundColor: "rgba(220,38,38,.1)", tension:.35, fill:true },
+      { label: t("leave"), data: leaveData, borderColor: "#d97706", backgroundColor: "rgba(217,119,6,.1)", tension:.35, fill:true }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color: chartTextColor() } } },
+      scales:{ x:{ ticks:{ color: chartTextColor() }, grid:{ color: chartGridColor() } }, y:{ beginAtZero:true, ticks:{ color: chartTextColor(), precision:0 }, grid:{ color: chartGridColor() } } } }
+  });
+}
+
+function renderDeptDonutChart() {
+  const canvas = document.getElementById("deptDonutChart");
+  if (!canvas) return;
+  const today = getToday();
+  const data = DEPARTMENTS.map(d => employees.filter(e => e.dept === d && getStatus(e.id, today) === "Present").length);
+  if (deptDonutChartInstance) deptDonutChartInstance.destroy();
+  deptDonutChartInstance = new Chart(canvas, {
+    type: "doughnut",
+    data: { labels: DEPARTMENTS.map(deptLabel), datasets: [{ data, backgroundColor: ["#15803d","#3a5a7d","#e08e0b"], borderWidth:0 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"bottom", labels:{ color: chartTextColor() } } } }
+  });
+}
+
+function renderMonthlyTrendChart() {
+  const canvas = document.getElementById("monthlyTrendChart");
+  if (!canvas) return;
+  const month = document.getElementById("reportMonth").value || getToday().slice(0,7);
+  const [year, mon] = month.split("-").map(Number);
+  const daysInMonth = new Date(year, mon, 0).getDate();
+  const labels = [], presentData = [], absentData = [], leaveData = [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = `${year}-${String(mon).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    labels.push(day);
+    const statuses = employees.filter(e => attendance[attendanceKey(e.id, date)]).map(e => getStatus(e.id, date));
+    presentData.push(statuses.filter(s => s === "Present").length);
+    absentData.push(statuses.filter(s => s === "Absent").length);
+    leaveData.push(statuses.filter(s => s === "Leave").length);
+  }
+  if (monthlyTrendChartInstance) monthlyTrendChartInstance.destroy();
+  monthlyTrendChartInstance = new Chart(canvas, {
+    type: "bar",
+    data: { labels, datasets: [
+      { label: t("present"), data: presentData, backgroundColor: "#15803d" },
+      { label: t("absent"), data: absentData, backgroundColor: "#dc2626" },
+      { label: t("leave"), data: leaveData, backgroundColor: "#d97706" }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color: chartTextColor() } } },
+      scales:{ x:{ stacked:true, ticks:{ color: chartTextColor() }, grid:{ display:false } }, y:{ stacked:true, beginAtZero:true, ticks:{ color: chartTextColor(), precision:0 }, grid:{ color: chartGridColor() } } } }
+  });
 }
 
 /* =========================================================
@@ -789,13 +1120,16 @@ function renderDashboard() {
   document.getElementById("dashTable").innerHTML = employees.map(e => {
     const status = getStatus(e.id, today);
     return `
-      <tr class="border-b last:border-0 hover:bg-slate-50">
+      <tr class="border-b last:border-0 hover:bg-brand-50/40 dark:hover:bg-white/5" style="border-color:var(--border)">
         <td class="p-4 font-semibold">${escapeHTML(e.name)}</td>
         <td>${escapeHTML(deptLabel(e.dept))}</td>
         <td>${escapeHTML(e.role)}</td>
         <td>${badge(status)}</td>
       </tr>`;
   }).join("");
+
+  renderWeeklyTrendChart();
+  renderDeptDonutChart();
 }
 
 /* =========================================================
@@ -814,20 +1148,20 @@ function renderEmployees() {
   const table = document.getElementById("employeeTable");
 
   if (!filtered.length) {
-    table.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-500">${t("noEmployeesFound")}</td></tr>`;
+    table.innerHTML = `<tr><td colspan="6" class="p-10 text-center muted">${t("noEmployeesFound")}</td></tr>`;
     return;
   }
 
   table.innerHTML = filtered.map(e => {
     const status = getStatus(e.id, getToday());
     return `
-      <tr class="border-b last:border-0 hover:bg-slate-50">
+      <tr class="border-b last:border-0 hover:bg-brand-50/40 dark:hover:bg-white/5" style="border-color:var(--border)">
         <td class="p-4">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 grid place-items-center font-bold">${escapeHTML(e.name.charAt(0))}</div>
+            <div class="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 grid place-items-center font-bold">${escapeHTML(e.name.charAt(0))}</div>
             <div>
               <p class="font-bold">${escapeHTML(e.name)}</p>
-              <p class="text-xs text-slate-500">${t("idPrefix")}: GP-${String(e.id).padStart(3,"0")}</p>
+              <p class="text-xs muted">${t("idPrefix")}: GP-${String(e.id).padStart(3,"0")}</p>
             </div>
           </div>
         </td>
@@ -837,8 +1171,8 @@ function renderEmployees() {
         <td>${badge(status)}</td>
         <td class="pr-4">
           <div class="flex gap-2">
-            <button onclick="editEmployee(${e.id})" class="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold">${t("editBtn")}</button>
-            <button onclick="openDeleteModal(${e.id})" class="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-semibold">${t("deleteBtn")}</button>
+            <button onclick="editEmployee(${e.id})" class="px-3 py-1.5 rounded-lg bg-seal-700/10 text-seal-700 dark:text-seal-500 hover:bg-seal-700/20 font-semibold">${t("editBtn")}</button>
+            <button onclick="openDeleteModal(${e.id})" class="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 font-semibold">${t("deleteBtn")}</button>
           </div>
         </td>
       </tr>`;
@@ -917,13 +1251,16 @@ function confirmDelete() {
   if (!deleteEmployeeId) return;
   employees = employees.filter(e => e.id !== deleteEmployeeId);
   Object.keys(attendance).forEach(key => { if (key.endsWith("_" + deleteEmployeeId)) delete attendance[key]; });
+  leaveRequests = leaveRequests.filter(l => l.employeeId !== deleteEmployeeId);
 
   persistEmployees();
   persistAttendance();
+  persistLeaves();
   closeDeleteModal();
   renderEmployees();
   renderDashboard();
   renderAttendance();
+  renderLeave();
   populateReportEmployees();
   renderReports();
   toast(t("toastEmployeeDeleted"));
@@ -938,18 +1275,26 @@ function renderAttendance() {
   const filtered = employees.filter(e => !department || e.dept === department);
   const table = document.getElementById("attendanceTable");
 
+  const banner = document.getElementById("holidayBanner");
+  if (isHoliday(date)) {
+    banner.classList.remove("hidden");
+    document.getElementById("holidayBannerText").textContent = `${t("todayIsHoliday")}: ${holidayName(date)}`;
+  } else {
+    banner.classList.add("hidden");
+  }
+
   if (!filtered.length) {
-    table.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-500">${t("noEmployeesFound")}</td></tr>`;
+    table.innerHTML = `<tr><td colspan="4" class="p-10 text-center muted">${t("noEmployeesFound")}</td></tr>`;
     return;
   }
 
   table.innerHTML = filtered.map(e => {
     const status = getStatus(e.id, date);
     return `
-      <tr class="border-b last:border-0 hover:bg-slate-50">
+      <tr class="border-b last:border-0 hover:bg-brand-50/40 dark:hover:bg-white/5" style="border-color:var(--border)">
         <td class="p-4">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-full bg-green-100 text-green-700 grid place-items-center font-bold">${escapeHTML(e.name.charAt(0))}</div>
+            <div class="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 grid place-items-center font-bold">${escapeHTML(e.name.charAt(0))}</div>
             <span class="font-semibold">${escapeHTML(e.name)}</span>
           </div>
         </td>
@@ -959,15 +1304,15 @@ function renderAttendance() {
           <div class="flex flex-wrap gap-2">
             <label class="cursor-pointer">
               <input type="radio" name="status_${e.id}" value="Present" class="peer hidden" ${status==="Present"?"checked":""} onchange="temporaryStatus(${e.id}, 'Present')">
-              <span class="inline-block px-3 py-2 rounded-lg border text-green-700 peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600">✓ ${t("present")}</span>
+              <span class="inline-block px-3 py-2 rounded-lg border text-brand-700 dark:text-brand-400 peer-checked:bg-brand-600 peer-checked:text-white peer-checked:border-brand-600" style="border-color:var(--border)">✓ ${t("present")}</span>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="status_${e.id}" value="Absent" class="peer hidden" ${status==="Absent"?"checked":""} onchange="temporaryStatus(${e.id}, 'Absent')">
-              <span class="inline-block px-3 py-2 rounded-lg border text-red-600 peer-checked:bg-red-600 peer-checked:text-white peer-checked:border-red-600">✕ ${t("absent")}</span>
+              <span class="inline-block px-3 py-2 rounded-lg border text-red-600 dark:text-red-400 peer-checked:bg-red-600 peer-checked:text-white peer-checked:border-red-600" style="border-color:var(--border)">✕ ${t("absent")}</span>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="status_${e.id}" value="Leave" class="peer hidden" ${status==="Leave"?"checked":""} onchange="temporaryStatus(${e.id}, 'Leave')">
-              <span class="inline-block px-3 py-2 rounded-lg border text-amber-600 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:border-amber-500">🗓 ${t("leave")}</span>
+              <span class="inline-block px-3 py-2 rounded-lg border text-marigold-600 peer-checked:bg-marigold-500 peer-checked:text-white peer-checked:border-marigold-500" style="border-color:var(--border)">🗓 ${t("leave")}</span>
             </label>
           </div>
         </td>
@@ -991,11 +1336,11 @@ function updateAttendanceSummary() {
   const leave = statuses.filter(s => s === "Leave").length;
 
   document.getElementById("attendanceSummary").innerHTML = `
-    <span class="font-semibold text-green-700">${t("summaryPresent")}: ${present}</span>
+    <span class="font-semibold text-brand-700 dark:text-brand-400">${t("summaryPresent")}: ${present}</span>
     <span class="mx-2">•</span>
-    <span class="font-semibold text-red-600">${t("summaryAbsent")}: ${absent}</span>
+    <span class="font-semibold text-red-600 dark:text-red-400">${t("summaryAbsent")}: ${absent}</span>
     <span class="mx-2">•</span>
-    <span class="font-semibold text-amber-600">${t("summaryLeave")}: ${leave}</span>
+    <span class="font-semibold text-marigold-600">${t("summaryLeave")}: ${leave}</span>
   `;
 }
 
@@ -1011,6 +1356,147 @@ function saveAttendance() {
   renderDashboard();
   renderReports();
   toast(t("toastAttendanceSaved"));
+}
+
+/* =========================================================
+   LEAVE MANAGEMENT
+========================================================= */
+function populateLeaveEmployeeSelect() {
+  const select = document.getElementById("leaveEmployee");
+  select.innerHTML = employees.map(e => `<option value="${e.id}">${escapeHTML(e.name)}</option>`).join("");
+}
+
+function openLeaveModal() {
+  populateLeaveEmployeeSelect();
+  document.getElementById("leaveFrom").value = getToday();
+  document.getElementById("leaveTo").value = getToday();
+  document.getElementById("leaveReason").value = "";
+  document.getElementById("leaveModal").classList.remove("hidden");
+  document.getElementById("leaveModal").classList.add("flex");
+}
+function closeLeaveModal() {
+  document.getElementById("leaveModal").classList.add("hidden");
+  document.getElementById("leaveModal").classList.remove("flex");
+}
+
+function saveLeave() {
+  const employeeId = Number(document.getElementById("leaveEmployee").value);
+  const from = document.getElementById("leaveFrom").value;
+  const to = document.getElementById("leaveTo").value;
+  const reason = document.getElementById("leaveReason").value.trim();
+  if (!employeeId || !from || !to || !reason) { toast(t("toastFieldsRequired"), "error"); return; }
+
+  leaveRequests.push({ id: Date.now(), employeeId, from, to, reason, status: "Pending" });
+  persistLeaves();
+  closeLeaveModal();
+  renderLeave();
+  toast(t("toastLeaveApplied"));
+}
+
+function setLeaveStatus(id, status) {
+  const request = leaveRequests.find(l => l.id === id);
+  if (!request) return;
+  request.status = status;
+
+  if (status === "Approved") {
+    let cursor = request.from;
+    while (cursor <= request.to) {
+      attendance[attendanceKey(request.employeeId, cursor)] = "Leave";
+      cursor = addDays(cursor, 1);
+    }
+    persistAttendance();
+    renderDashboard();
+    renderAttendance();
+    renderReports();
+  }
+
+  persistLeaves();
+  renderLeave();
+  toast(status === "Approved" ? t("toastLeaveApproved") : t("toastLeaveRejected"));
+}
+
+function renderLeave() {
+  const table = document.getElementById("leaveTable");
+  if (!leaveRequests.length) {
+    table.innerHTML = `<tr><td colspan="6" class="p-10 text-center muted">${t("noLeaveRequests")}</td></tr>`;
+    return;
+  }
+  const statusClasses = { Pending:"bg-marigold-500/15 text-marigold-700 dark:text-marigold-300", Approved:"bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300", Rejected:"bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" };
+  const statusI18n = { Pending:"leaveStatusPending", Approved:"leaveStatusApproved", Rejected:"leaveStatusRejected" };
+
+  table.innerHTML = [...leaveRequests].sort((a,b) => b.id - a.id).map(l => {
+    const employee = employees.find(e => e.id === l.employeeId);
+    const name = employee ? employee.name : "—";
+    const actions = l.status === "Pending"
+      ? `<div class="flex gap-2">
+          <button onclick="setLeaveStatus(${l.id}, 'Approved')" class="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 hover:bg-brand-100 font-semibold">${t("approveBtn")}</button>
+          <button onclick="setLeaveStatus(${l.id}, 'Rejected')" class="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 font-semibold">${t("rejectBtn")}</button>
+        </div>`
+      : `<span class="text-xs muted">—</span>`;
+
+    return `
+      <tr class="border-b last:border-0 hover:bg-brand-50/40 dark:hover:bg-white/5" style="border-color:var(--border)">
+        <td class="p-4 font-semibold">${escapeHTML(name)}</td>
+        <td>${formatDate(l.from)}</td>
+        <td>${formatDate(l.to)}</td>
+        <td class="max-w-xs">${escapeHTML(l.reason)}</td>
+        <td><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${statusClasses[l.status]}">${t(statusI18n[l.status])}</span></td>
+        <td class="pr-4">${actions}</td>
+      </tr>`;
+  }).join("");
+}
+
+/* =========================================================
+   HOLIDAYS
+========================================================= */
+function openHolidayModal() {
+  document.getElementById("holidayDate").value = getToday();
+  document.getElementById("holidayName").value = "";
+  document.getElementById("holidayModal").classList.remove("hidden");
+  document.getElementById("holidayModal").classList.add("flex");
+}
+function closeHolidayModal() {
+  document.getElementById("holidayModal").classList.add("hidden");
+  document.getElementById("holidayModal").classList.remove("flex");
+}
+function saveHoliday() {
+  const date = document.getElementById("holidayDate").value;
+  const name = document.getElementById("holidayName").value.trim();
+  if (!date || !name) { toast(t("toastFieldsRequired"), "error"); return; }
+  holidays.push({ id: Date.now(), date, name });
+  persistHolidays();
+  closeHolidayModal();
+  renderHolidays();
+  renderAttendance();
+  toast(t("toastHolidayAdded"));
+}
+function deleteHoliday(id) {
+  holidays = holidays.filter(h => h.id !== id);
+  persistHolidays();
+  renderHolidays();
+  renderAttendance();
+  toast(t("toastHolidayDeleted"));
+}
+function renderHolidays() {
+  const wrap = document.getElementById("holidayList");
+  if (!holidays.length) {
+    wrap.innerHTML = `<div class="col-span-full surface border rounded-2xl p-10 text-center muted">${t("noHolidays")}</div>`;
+    return;
+  }
+  wrap.innerHTML = [...holidays].sort((a,b) => a.date.localeCompare(b.date)).map(h => `
+    <div class="surface border rounded-2xl p-5 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-xl bg-marigold-500/10 text-marigold-600 grid place-items-center font-black font-display text-center leading-tight text-xs">
+          ${new Date(h.date + "T00:00:00").toLocaleDateString(t("dateLocale"), { day:"2-digit", month:"short" })}
+        </div>
+        <div>
+          <p class="font-bold">${escapeHTML(h.name)}</p>
+          <p class="text-xs muted">${formatDate(h.date)}</p>
+        </div>
+      </div>
+      <button onclick="deleteHoliday(${h.id})" class="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 font-semibold">✕</button>
+    </div>
+  `).join("");
 }
 
 /* =========================================================
@@ -1063,17 +1549,17 @@ function renderReports() {
     const percentage = total ? Math.round((present / total) * 100) : 0;
 
     return `
-      <tr class="border-b last:border-0 hover:bg-slate-50">
+      <tr class="border-b last:border-0 hover:bg-brand-50/40 dark:hover:bg-white/5" style="border-color:var(--border)">
         <td class="p-4 font-bold">${escapeHTML(e.name)}</td>
         <td>${escapeHTML(deptLabel(e.dept))}</td>
-        <td class="text-green-700 font-bold">${present}</td>
-        <td class="text-red-600 font-bold">${absent}</td>
-        <td class="text-amber-600 font-bold">${leave}</td>
-        <td><span class="inline-flex px-3 py-1 rounded-full text-xs font-bold ${percentage>=75 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}">${percentage}%</span></td>
+        <td class="text-brand-700 dark:text-brand-400 font-bold">${present}</td>
+        <td class="text-red-600 dark:text-red-400 font-bold">${absent}</td>
+        <td class="text-marigold-600 font-bold">${leave}</td>
+        <td><span class="inline-flex px-3 py-1 rounded-full text-xs font-bold ${percentage>=75 ? "bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300" : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"}">${percentage}%</span></td>
       </tr>`;
   }).join("");
 
-  document.getElementById("reportTable").innerHTML = rows || `<tr><td colspan="6" class="p-10 text-center text-slate-500">${t("noReportData")}</td></tr>`;
+  document.getElementById("reportTable").innerHTML = rows || `<tr><td colspan="6" class="p-10 text-center muted">${t("noReportData")}</td></tr>`;
 
   const rate = totalRecords ? Math.round((totalPresent / totalRecords) * 100) : 0;
   const uniqueDates = new Set();
@@ -1084,6 +1570,14 @@ function renderReports() {
   document.getElementById("recordCount").textContent = totalRecords;
   document.getElementById("reportPresent").textContent = totalPresent;
   document.getElementById("reportSubtitle").textContent = new Date(year, mon - 1).toLocaleDateString(t("dateLocale"), { month:"long", year:"numeric" });
+
+  const ring = document.getElementById("rateRing");
+  if (ring) {
+    ring.style.setProperty("--pct", rate);
+    ring.style.setProperty("--ring-col", rate >= 75 ? "#15803d" : (rate >= 50 ? "#e08e0b" : "#dc2626"));
+  }
+
+  renderMonthlyTrendChart();
 }
 
 /* =========================================================
@@ -1141,6 +1635,7 @@ function escapeHTML(value) {
 async function start() {
   await loadAll();
 
+  applyDarkMode();
   document.getElementById("langSwitcherLogin").value = lang;
   document.getElementById("langSwitcherSidebar").value = lang;
   document.getElementById("langSwitcherMobile").value = lang;
