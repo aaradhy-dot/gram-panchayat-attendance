@@ -44,52 +44,6 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .progress{transition:width .8s cubic-bezier(.2,.8,.2,1)}
 .no-print{}
 @media print{.no-print,aside,header,.mobile-nav{display:none!important}.print-area{display:block!important}.page{animation:none}.shadow,.shadow-sm,.shadow-lg{box-shadow:none!important}}
-
-/* ===== FINAL MOBILE UI ===== */
-html,body{max-width:100%;overflow-x:hidden}
-@media(max-width:767px){
-  .card-hover:hover{transform:none}
-  #publicSite>div:first-child .max-w-7xl{padding:.45rem .8rem;gap:.25rem;font-size:10px}
-  #publicSite>div:first-child .flex.gap-4{display:none}
-  #publicSite header>.max-w-7xl{padding-left:.75rem;padding-right:.75rem}
-  #publicSite header .h-20{height:64px}
-  #publicContent h1{font-size:2rem!important;line-height:1.12!important}
-  #publicContent h2{font-size:1.55rem!important;line-height:1.2!important}
-  #publicContent p{line-height:1.65}
-  #publicContent section>.max-w-7xl,
-  #publicContent section>.max-w-6xl,
-  #publicContent section>.max-w-5xl{padding-left:1rem;padding-right:1rem}
-  #publicContent .rounded-\[2rem\]{border-radius:1.25rem}
-  #publicContent img.h-\[520px\]{height:300px}
-  #publicContent .grid.grid-cols-2{gap:.65rem}
-  #publicContent .grid.grid-cols-2>div{padding:.85rem}
-  footer{margin-top:2.5rem!important}
-  footer .py-12{padding-top:2rem;padding-bottom:2rem}
-  #loginModal{padding:.75rem}
-  #loginModal>div{border-radius:1.4rem;max-height:94vh;overflow-y:auto}
-  #loginModal .gradient-hero{padding:1.25rem}
-  #loginModal form{padding:1.25rem}
-  #modal{padding:.65rem}
-  #modalBox{max-height:94vh;border-radius:1.25rem}
-  #adminContent{padding:1rem}
-  #adminContent .rounded-\[2rem\]{border-radius:1.25rem}
-  #adminContent .p-7{padding:1.15rem}
-  #adminContent .p-6{padding:1rem}
-  #adminContent .p-5{padding:1rem}
-  #adminContent .space-y-7>:not([hidden])~:not([hidden]){margin-top:1rem}
-  #adminContent .text-3xl{font-size:1.65rem}
-  #adminContent .text-4xl{font-size:1.9rem}
-  .heading{font-size:1.65rem!important}
-  .input{font-size:16px!important}
-  table{min-width:680px}
-  .statusbtn{white-space:nowrap}
-  #sidebar{width:min(86vw,300px)}
-}
-@media(max-width:390px){
-  #publicContent h1{font-size:1.8rem!important}
-  #publicLang{width:68px;padding-left:.3rem;padding-right:.3rem}
-}
-
 </style>
 </head>
 
@@ -108,12 +62,12 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="max-w-7xl mx-auto px-4">
       <div class="h-20 flex items-center justify-between gap-4">
         <button onclick="publicHome()" class="flex items-center gap-3 text-left">
-          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-700 text-white grid place-items-center shadow-soft shrink-0">
+          <div class="w-12 h-12 rounded-2xl bg-brand-700 text-white grid place-items-center shadow-soft">
             <i data-lucide="landmark"></i>
           </div>
           <div>
-            <div class="font-black text-sm sm:text-lg leading-tight" data-i18n="panchayatName">Gram Panchayat</div>
-            <div class="hidden sm:block text-xs text-slate-500 dark:text-slate-400" data-i18n="panchayatSub">Digital Governance Portal</div>
+            <div class="font-black text-lg leading-tight" data-i18n="panchayatName">Gram Panchayat</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400" data-i18n="panchayatSub">Digital Governance Portal</div>
           </div>
         </button>
 
@@ -128,14 +82,12 @@ html,body{max-width:100%;overflow-x:hidden}
           <button onclick="publicPage('contact')" class="pubnav px-3 py-2 rounded-xl" data-page="contact">Contact</button>
         </nav>
 
-        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <select id="publicLang" onchange="setLang(this.value)" class="rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900 px-1.5 sm:px-2 py-2 text-[10px] sm:text-xs">
-            <option value="en">EN</option><option value="hi">हिंदी</option><option value="mr">मराठी</option>
+        <div class="flex items-center gap-2">
+          <select id="publicLang" onchange="setLang(this.value)" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900 px-2 py-2 text-xs">
+            <option value="en">English</option><option value="hi">हिंदी</option><option value="mr">मराठी</option>
           </select>
-          <button onclick="toggleDark()" class="hidden sm:grid w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 place-items-center" title="Theme"><i data-lucide="moon"></i></button>
-          <button onclick="requestLocationAndOpenAdmin()" class="flex items-center justify-center gap-1.5 bg-brand-700 hover:bg-brand-800 text-white h-10 px-3 sm:px-4 rounded-xl font-black text-xs sm:text-sm shadow-sm">
-            <i data-lucide="shield-check" size="16"></i><span>Admin</span>
-          </button>
+          <button onclick="toggleDark()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center" title="Theme"><i data-lucide="moon"></i></button>
+          <button onclick="openAdminLogin()" class="flex items-center justify-center gap-1.5 bg-brand-700 hover:bg-brand-800 text-white px-3 sm:px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm"><i data-lucide="shield-check" size="17"></i><span>Admin</span></button>
           <button onclick="togglePublicMenu()" class="lg:hidden w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center"><i data-lucide="menu"></i></button>
         </div>
       </div>
@@ -149,8 +101,6 @@ html,body{max-width:100%;overflow-x:hidden}
           <button onclick="publicPage('documents')" class="p-3 rounded-xl bg-slate-100 dark:bg-slate-900">Documents</button>
           <button onclick="publicPage('gallery')" class="p-3 rounded-xl bg-slate-100 dark:bg-slate-900">Gallery</button>
           <button onclick="publicPage('contact')" class="p-3 rounded-xl bg-slate-100 dark:bg-slate-900">Contact</button>
-          <button onclick="toggleDark()" class="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 flex justify-center gap-2"><i data-lucide="moon" size="17"></i> Theme</button>
-          <button onclick="togglePublicMenu();requestLocationAndOpenAdmin()" class="p-3 rounded-xl bg-brand-700 text-white font-black flex justify-center gap-2"><i data-lucide="shield-check" size="17"></i> Admin Login</button>
         </div>
       </div>
     </div>
@@ -206,8 +156,8 @@ html,body{max-width:100%;overflow-x:hidden}
 
   <section class="lg:ml-72 min-h-screen">
     <header class="sticky top-0 z-30 glass border-b border-slate-200 dark:border-slate-800">
-      <div class="h-16 sm:h-20 px-3 sm:px-4 md:px-7 flex items-center justify-between gap-2 sm:gap-4">
-        <div class="flex items-center gap-3"><button onclick="openSidebar()" class="lg:hidden w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center"><i data-lucide="menu"></i></button><div><h1 id="adminTitle" class="font-black text-base sm:text-xl">Dashboard</h1><p id="adminDate" class="text-xs text-slate-500"></p></div></div>
+      <div class="h-20 px-4 md:px-7 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3"><button onclick="openSidebar()" class="lg:hidden w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 grid place-items-center"><i data-lucide="menu"></i></button><div><h1 id="adminTitle" class="font-black text-xl">Dashboard</h1><p id="adminDate" class="text-xs text-slate-500"></p></div></div>
         <div class="flex items-center gap-2"><div class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 text-sm font-bold"><span class="w-2 h-2 bg-brand-500 rounded-full animate-pulse"></span> System Online</div><div class="w-10 h-10 rounded-full bg-brand-700 text-white grid place-items-center font-black">A</div></div>
       </div>
     </header>
@@ -340,78 +290,24 @@ function renderPublic(){
  lucide.createIcons();
 }
 function publicHomeHTML(){
- return `<section class="gradient-hero text-white"><div class="max-w-7xl mx-auto px-4 py-11 sm:py-16 md:py-28 grid lg:grid-cols-[1.15fr_.85fr] gap-7 md:gap-12 items-center">
+ return `<section class="gradient-hero text-white"><div class="max-w-7xl mx-auto px-4 py-20 md:py-28 grid lg:grid-cols-[1.15fr_.85fr] gap-12 items-center">
   <div class="fade-in"><div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-xs font-bold mb-6"><span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span> Digital Gram Panchayat</div>
-  <h1 class="text-3xl sm:text-4xl md:text-6xl font-black leading-[1.1] md:leading-[1.03] max-w-3xl">${T('heroTitle')}</h1><p class="text-white/75 text-lg leading-8 max-w-2xl mt-6">${T('heroSub')}</p>
+  <h1 class="text-4xl md:text-6xl font-black leading-[1.03] max-w-3xl">${T('heroTitle')}</h1><p class="text-white/75 text-lg leading-8 max-w-2xl mt-6">${T('heroSub')}</p>
   <div class="flex flex-wrap gap-3 mt-8"><button onclick="publicPage('about')" class="bg-white text-brand-800 px-5 py-3 rounded-xl font-black">${T('explore')} <i data-lucide="arrow-right" class="inline" size="17"></i></button><button onclick="publicPage('notices')" class="bg-white/10 border border-white/20 px-5 py-3 rounded-xl font-bold">View Notices</button></div></div>
   <div class="glass text-slate-800 dark:text-white rounded-3xl p-6 shadow-2xl border border-white/20"><div class="flex items-center justify-between mb-6"><div><p class="text-xs uppercase tracking-widest font-black opacity-60">Panchayat at a Glance</p><h3 class="text-2xl font-black mt-1">Digital Village</h3></div><div class="w-12 h-12 rounded-2xl bg-brand-100 dark:bg-brand-900/30 text-brand-700 grid place-items-center"><i data-lucide="bar-chart-3"></i></div></div><div class="grid grid-cols-2 gap-3">${[['users','Citizens','Village Community'],['badge-indian-rupee','Schemes',data.schemes.length+' active'],['construction','Works',data.works.length+' tracked'],['megaphone','Notices',data.notices.length+' published']].map(x=>`<div class="rounded-2xl bg-slate-50 dark:bg-slate-800/70 p-4"><i data-lucide="${x[0]}" class="text-brand-600"></i><div class="font-black mt-3">${x[1]}</div><div class="text-xs opacity-60">${x[2]}</div></div>`).join('')}</div></div>
  </div></section>
- <section class="max-w-7xl mx-auto px-4 py-10 md:py-14"><div class="flex justify-between items-end mb-7"><div><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('notice')}</div><h2 class="text-3xl font-black mt-2">Stay Informed</h2></div><button onclick="publicPage('notices')" class="text-sm font-bold text-brand-700">View all →</button></div>
+ <section class="max-w-7xl mx-auto px-4 py-14"><div class="flex justify-between items-end mb-7"><div><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('notice')}</div><h2 class="text-3xl font-black mt-2">Stay Informed</h2></div><button onclick="publicPage('notices')" class="text-sm font-bold text-brand-700">View all →</button></div>
  <div class="grid md:grid-cols-2 gap-5">${data.notices.slice(0,2).map(noticeCard).join('')}</div></section>
- <section class="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800"><div class="max-w-7xl mx-auto px-4 py-10 md:py-14"><div class="text-center max-w-2xl mx-auto"><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('citizen')}</div><h2 class="text-3xl font-black mt-2">Services & Information</h2><p class="text-slate-500 mt-3">Everything citizens need to know about local governance, schemes and development.</p></div><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">${[['landmark','About Panchayat','Learn about the Panchayat and leadership','about'],['badge-indian-rupee','Government Schemes','Explore welfare and development schemes','schemes'],['construction','Development Works','Track important village projects','works'],['file-text','Documents','Access notices, forms and reports','documents']].map(x=>`<button onclick="publicPage('${x[3]}')" class="text-left p-6 rounded-3xl border border-slate-200 dark:border-slate-800 card-hover"><div class="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-900/20 text-brand-700 grid place-items-center"><i data-lucide="${x[0]}"></i></div><h3 class="font-black mt-5">${x[1]}</h3><p class="text-sm text-slate-500 mt-2 leading-6">${x[2]}</p><span class="inline-block mt-4 text-brand-700 font-bold text-sm">Explore →</span></button>`).join('')}</div></div></section>`;
+ <section class="bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800"><div class="max-w-7xl mx-auto px-4 py-14"><div class="text-center max-w-2xl mx-auto"><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('citizen')}</div><h2 class="text-3xl font-black mt-2">Services & Information</h2><p class="text-slate-500 mt-3">Everything citizens need to know about local governance, schemes and development.</p></div><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">${[['landmark','About Panchayat','Learn about the Panchayat and leadership','about'],['badge-indian-rupee','Government Schemes','Explore welfare and development schemes','schemes'],['construction','Development Works','Track important village projects','works'],['file-text','Documents','Access notices, forms and reports','documents']].map(x=>`<button onclick="publicPage('${x[3]}')" class="text-left p-6 rounded-3xl border border-slate-200 dark:border-slate-800 card-hover"><div class="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-900/20 text-brand-700 grid place-items-center"><i data-lucide="${x[0]}"></i></div><h3 class="font-black mt-5">${x[1]}</h3><p class="text-sm text-slate-500 mt-2 leading-6">${x[2]}</p><span class="inline-block mt-4 text-brand-700 font-bold text-sm">Explore →</span></button>`).join('')}</div></div></section>`;
 }
 function noticeCard(n){return `<article class="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 card-hover"><div class="flex justify-between gap-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-black ${n.priority==='High'?'bg-red-50 text-red-700':'bg-brand-50 text-brand-700'}">${n.priority}</span><span class="text-xs text-slate-400">${fmt(n.date)}</span></div><h3 class="text-xl font-black mt-5">${esc(n.title)}</h3><p class="text-sm text-slate-500 mt-2 leading-7">${esc(n.text)}</p></article>`}
-function publicAboutHTML(){return `<section class="max-w-7xl mx-auto px-4 py-10 md:py-16"><div class="grid lg:grid-cols-2 gap-12 items-center"><div><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('about')}</div><h1 class="text-4xl md:text-5xl font-black mt-3">Transparent local governance with a citizen-first approach.</h1><p class="text-slate-500 dark:text-slate-400 text-lg leading-8 mt-6">The Gram Panchayat is the foundation of local self-government. This portal brings public information, notices, welfare schemes and development progress into one accessible digital space.</p><div class="grid sm:grid-cols-2 gap-4 mt-8">${[['eye','Transparency','Make public information easier to discover.'],['heart-handshake','Citizen Service','Keep citizen needs at the centre of governance.'],['shield-check','Accountability','Track activities and development work.'],['sprout','Sustainable Growth','Support clean, connected and resilient villages.']].map(x=>`<div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><i data-lucide="${x[0]}" class="text-brand-700"></i><h3 class="font-black mt-3">${x[1]}</h3><p class="text-sm text-slate-500 mt-1">${x[2]}</p></div>`).join('')}</div></div><div class="rounded-[2rem] overflow-hidden shadow-glow"><img class="w-full h-[520px] object-cover" src="https://images.unsplash.com/photo-1509099836639-18ba02c7d4d5?auto=format&fit=crop&w=1200&q=85" alt="Village community"></div></div></section>`}
-function publicSchemesHTML(){return `<section class="max-w-7xl mx-auto px-4 py-10 md:py-16"><div class="max-w-3xl"><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('schemes')}</div><h1 class="text-4xl font-black mt-3">Government schemes & citizen benefits</h1><p class="text-slate-500 mt-4 leading-7">Information shown here is for awareness. Eligibility and application should be verified with the concerned government department.</p></div><div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">${data.schemes.map(s=>`<article class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 card-hover"><div class="w-12 h-12 rounded-2xl bg-gov-100 text-gov-700 grid place-items-center"><i data-lucide="badge-indian-rupee"></i></div><span class="inline-block mt-5 text-[10px] font-black uppercase tracking-widest text-brand-700">${esc(s.category)}</span><h3 class="text-xl font-black mt-2">${esc(s.name)}</h3><p class="text-sm text-slate-500 mt-3 leading-6">${esc(s.text)}</p></article>`).join('')}</div></section>`}
-function publicWorksHTML(){return `<section class="max-w-7xl mx-auto px-4 py-10 md:py-16"><div class="max-w-3xl"><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('works')}</div><h1 class="text-4xl font-black mt-3">Village development works</h1><p class="text-slate-500 mt-4">Track major public works, progress, location and estimated completion.</p></div><div class="grid lg:grid-cols-3 gap-5 mt-10">${data.works.map(w=>`<article class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 card-hover"><div class="flex justify-between"><span class="px-3 py-1 rounded-full text-xs font-black ${w.status==='Completed'?'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-700'}">${w.status}</span><i data-lucide="construction" class="text-brand-700"></i></div><h3 class="font-black text-xl mt-5">${esc(w.title)}</h3><div class="text-sm text-slate-500 mt-2 flex gap-2"><i data-lucide="map-pin" size="16"></i>${esc(w.location)}</div><div class="flex justify-between text-xs font-bold mt-7"><span>Progress</span><span>${w.progress}%</span></div><div class="h-2 bg-slate-100 dark:bg-slate-800 rounded-full mt-2 overflow-hidden"><div class="h-full bg-brand-600 rounded-full progress" style="width:${w.progress}%"></div></div><div class="grid grid-cols-2 gap-3 mt-5 text-sm"><div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-3"><div class="text-xs text-slate-400">Budget</div><b>${money(w.budget)}</b></div><div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-3"><div class="text-xs text-slate-400">Completion</div><b>${fmt(w.completion)}</b></div></div></article>`).join('')}</div></section>`}
-function publicNoticesHTML(){return `<section class="max-w-5xl mx-auto px-4 py-10 md:py-16"><div class="text-xs uppercase tracking-widest font-black text-brand-700">Public Information</div><h1 class="text-4xl font-black mt-3">Notices & Announcements</h1><div class="space-y-4 mt-10">${data.notices.map(n=>noticeCard(n)).join('')}</div></section>`}
-function publicDocumentsHTML(){return `<section class="max-w-6xl mx-auto px-4 py-10 md:py-16"><div class="text-xs uppercase tracking-widest font-black text-brand-700">Resources</div><h1 class="text-4xl font-black mt-3">Documents & Forms</h1><div class="overflow-hidden mt-10 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"><div class="divide-y divide-slate-200 dark:divide-slate-800">${data.documents.map(d=>`<div class="p-5 flex items-center justify-between gap-4"><div class="flex items-center gap-4"><div class="w-11 h-11 rounded-xl bg-red-50 text-red-600 grid place-items-center"><i data-lucide="file-text"></i></div><div><h3 class="font-bold">${esc(d.title)}</h3><p class="text-xs text-slate-400 mt-1">${esc(d.type)} • ${fmt(d.date)}</p></div></div><a href="${esc(d.url)}" class="px-4 py-2 rounded-xl bg-brand-50 text-brand-700 font-bold text-sm">View</a></div>`).join('')}</div></div></section>`}
-function publicGalleryHTML(){return `<section class="max-w-7xl mx-auto px-4 py-10 md:py-16"><div class="text-xs uppercase tracking-widest font-black text-brand-700">Village Life</div><h1 class="text-4xl font-black mt-3">Photo Gallery</h1><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">${data.gallery.map(g=>`<figure class="group rounded-3xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><img src="${esc(g.image)}" class="w-full aspect-[4/3] object-cover group-hover:scale-105 transition duration-500" alt="${esc(g.title)}"><figcaption class="p-4 font-bold">${esc(g.title)}</figcaption></figure>`).join('')}</div></section>`}
-function publicContactHTML(){return `<section class="max-w-7xl mx-auto px-4 py-10 md:py-16"><div class="grid lg:grid-cols-2 gap-10"><div><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('contact')}</div><h1 class="text-4xl font-black mt-3">We are here to serve.</h1><p class="text-slate-500 mt-5 leading-7">For applications, certificates, schemes and local governance queries, visit the Panchayat office during working hours.</p><div class="space-y-4 mt-8">${[['map-pin','Office Address','Gram Panchayat Office, Taluka, District, Maharashtra'],['phone','Phone','0712-0000000'],['mail','Email','panchayat@example.gov.in'],['clock','Office Hours','Monday to Saturday • 10:00 AM – 5:30 PM']].map(x=>`<div class="flex gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><div class="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-900/20 text-brand-700 grid place-items-center"><i data-lucide="${x[0]}"></i></div><div><div class="text-xs text-slate-400">${x[1]}</div><div class="font-bold mt-1">${x[2]}</div></div></div>`).join('')}</div></div><div class="rounded-3xl bg-slate-100 dark:bg-slate-900 min-h-[450px] grid place-items-center text-center p-10"><div><i data-lucide="map" size="52" class="mx-auto text-brand-700"></i><h3 class="text-2xl font-black mt-5">Office Location</h3><p class="text-slate-500 mt-2">Replace this area with the official Google Maps embed for your Gram Panchayat.</p></div></div></div></section>`}
-
-
-/* =========================================================
-   GRAM PANCHAYAT OFFICE YERLA - LOCATION GEOFENCE
-========================================================= */
-const YERLA_GEOFENCE={
-  name:'Gram Panchayat Office Yerla',
-  latitude:21.2090128,
-  longitude:78.9609805,
-  radiusMeters:150,
-  maxAccuracyMeters:250
-};
-let locationVerifiedThisSession=false;
-let verifiedLocation=null;
-
-function distanceMeters(lat1,lon1,lat2,lon2){
-  const R=6371000,toRad=d=>d*Math.PI/180;
-  const dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1);
-  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-function getSecureLocation(){
-  return new Promise((resolve,reject)=>{
-    if(!navigator.geolocation)return reject(new Error('Location is not supported by this browser.'));
-    navigator.geolocation.getCurrentPosition(resolve,e=>{
-      if(e.code===1)return reject(new Error('Location permission denied. Please allow location permission.'));
-      if(e.code===2)return reject(new Error('GPS location unavailable. Please turn on Location/GPS.'));
-      reject(new Error('Location check timed out. Please try again.'));
-    },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
-  });
-}
-async function verifyYerlaLocation(){
-  const p=await getSecureLocation();
-  const {latitude,longitude,accuracy}=p.coords;
-  const distance=distanceMeters(latitude,longitude,YERLA_GEOFENCE.latitude,YERLA_GEOFENCE.longitude);
-  verifiedLocation={latitude,longitude,accuracy:Math.round(accuracy||0),distance:Math.round(distance),checkedAt:new Date().toISOString()};
-  if(accuracy && accuracy>YERLA_GEOFENCE.maxAccuracyMeters)
-    throw new Error(`GPS accuracy is too low (${Math.round(accuracy)} m). Please move outdoors and retry.`);
-  if(distance>YERLA_GEOFENCE.radiusMeters)
-    throw new Error(`Admin access blocked. You are ${(distance/1000).toFixed(2)} km away from Gram Panchayat Office Yerla.`);
-  locationVerifiedThisSession=true;
-  return verifiedLocation;
-}
-async function requestLocationAndOpenAdmin(){
-  toast('Checking Gram Panchayat Office location...');
-  try{
-    const loc=await verifyYerlaLocation();
-    openAdminLogin();
-    toast(`Location verified • ${loc.distance} m from office`);
-  }catch(e){
-    toast(e.message,'error');
-    alert('Admin Login Blocked\\n\\n'+e.message);
-  }
-}
+function publicAboutHTML(){return `<section class="max-w-7xl mx-auto px-4 py-16"><div class="grid lg:grid-cols-2 gap-12 items-center"><div><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('about')}</div><h1 class="text-4xl md:text-5xl font-black mt-3">Transparent local governance with a citizen-first approach.</h1><p class="text-slate-500 dark:text-slate-400 text-lg leading-8 mt-6">The Gram Panchayat is the foundation of local self-government. This portal brings public information, notices, welfare schemes and development progress into one accessible digital space.</p><div class="grid sm:grid-cols-2 gap-4 mt-8">${[['eye','Transparency','Make public information easier to discover.'],['heart-handshake','Citizen Service','Keep citizen needs at the centre of governance.'],['shield-check','Accountability','Track activities and development work.'],['sprout','Sustainable Growth','Support clean, connected and resilient villages.']].map(x=>`<div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><i data-lucide="${x[0]}" class="text-brand-700"></i><h3 class="font-black mt-3">${x[1]}</h3><p class="text-sm text-slate-500 mt-1">${x[2]}</p></div>`).join('')}</div></div><div class="rounded-[2rem] overflow-hidden shadow-glow"><img class="w-full h-[520px] object-cover" src="https://images.unsplash.com/photo-1509099836639-18ba02c7d4d5?auto=format&fit=crop&w=1200&q=85" alt="Village community"></div></div></section>`}
+function publicSchemesHTML(){return `<section class="max-w-7xl mx-auto px-4 py-16"><div class="max-w-3xl"><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('schemes')}</div><h1 class="text-4xl font-black mt-3">Government schemes & citizen benefits</h1><p class="text-slate-500 mt-4 leading-7">Information shown here is for awareness. Eligibility and application should be verified with the concerned government department.</p></div><div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">${data.schemes.map(s=>`<article class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 card-hover"><div class="w-12 h-12 rounded-2xl bg-gov-100 text-gov-700 grid place-items-center"><i data-lucide="badge-indian-rupee"></i></div><span class="inline-block mt-5 text-[10px] font-black uppercase tracking-widest text-brand-700">${esc(s.category)}</span><h3 class="text-xl font-black mt-2">${esc(s.name)}</h3><p class="text-sm text-slate-500 mt-3 leading-6">${esc(s.text)}</p></article>`).join('')}</div></section>`}
+function publicWorksHTML(){return `<section class="max-w-7xl mx-auto px-4 py-16"><div class="max-w-3xl"><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('works')}</div><h1 class="text-4xl font-black mt-3">Village development works</h1><p class="text-slate-500 mt-4">Track major public works, progress, location and estimated completion.</p></div><div class="grid lg:grid-cols-3 gap-5 mt-10">${data.works.map(w=>`<article class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 card-hover"><div class="flex justify-between"><span class="px-3 py-1 rounded-full text-xs font-black ${w.status==='Completed'?'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-700'}">${w.status}</span><i data-lucide="construction" class="text-brand-700"></i></div><h3 class="font-black text-xl mt-5">${esc(w.title)}</h3><div class="text-sm text-slate-500 mt-2 flex gap-2"><i data-lucide="map-pin" size="16"></i>${esc(w.location)}</div><div class="flex justify-between text-xs font-bold mt-7"><span>Progress</span><span>${w.progress}%</span></div><div class="h-2 bg-slate-100 dark:bg-slate-800 rounded-full mt-2 overflow-hidden"><div class="h-full bg-brand-600 rounded-full progress" style="width:${w.progress}%"></div></div><div class="grid grid-cols-2 gap-3 mt-5 text-sm"><div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-3"><div class="text-xs text-slate-400">Budget</div><b>${money(w.budget)}</b></div><div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-3"><div class="text-xs text-slate-400">Completion</div><b>${fmt(w.completion)}</b></div></div></article>`).join('')}</div></section>`}
+function publicNoticesHTML(){return `<section class="max-w-5xl mx-auto px-4 py-16"><div class="text-xs uppercase tracking-widest font-black text-brand-700">Public Information</div><h1 class="text-4xl font-black mt-3">Notices & Announcements</h1><div class="space-y-4 mt-10">${data.notices.map(n=>noticeCard(n)).join('')}</div></section>`}
+function publicDocumentsHTML(){return `<section class="max-w-6xl mx-auto px-4 py-16"><div class="text-xs uppercase tracking-widest font-black text-brand-700">Resources</div><h1 class="text-4xl font-black mt-3">Documents & Forms</h1><div class="overflow-hidden mt-10 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"><div class="divide-y divide-slate-200 dark:divide-slate-800">${data.documents.map(d=>`<div class="p-5 flex items-center justify-between gap-4"><div class="flex items-center gap-4"><div class="w-11 h-11 rounded-xl bg-red-50 text-red-600 grid place-items-center"><i data-lucide="file-text"></i></div><div><h3 class="font-bold">${esc(d.title)}</h3><p class="text-xs text-slate-400 mt-1">${esc(d.type)} • ${fmt(d.date)}</p></div></div><a href="${esc(d.url)}" class="px-4 py-2 rounded-xl bg-brand-50 text-brand-700 font-bold text-sm">View</a></div>`).join('')}</div></div></section>`}
+function publicGalleryHTML(){return `<section class="max-w-7xl mx-auto px-4 py-16"><div class="text-xs uppercase tracking-widest font-black text-brand-700">Village Life</div><h1 class="text-4xl font-black mt-3">Photo Gallery</h1><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">${data.gallery.map(g=>`<figure class="group rounded-3xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><img src="${esc(g.image)}" class="w-full aspect-[4/3] object-cover group-hover:scale-105 transition duration-500" alt="${esc(g.title)}"><figcaption class="p-4 font-bold">${esc(g.title)}</figcaption></figure>`).join('')}</div></section>`}
+function publicContactHTML(){return `<section class="max-w-7xl mx-auto px-4 py-16"><div class="grid lg:grid-cols-2 gap-10"><div><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('contact')}</div><h1 class="text-4xl font-black mt-3">We are here to serve.</h1><p class="text-slate-500 mt-5 leading-7">For applications, certificates, schemes and local governance queries, visit the Panchayat office during working hours.</p><div class="space-y-4 mt-8">${[['map-pin','Office Address','Gram Panchayat Office, Taluka, District, Maharashtra'],['phone','Phone','0712-0000000'],['mail','Email','panchayat@example.gov.in'],['clock','Office Hours','Monday to Saturday • 10:00 AM – 5:30 PM']].map(x=>`<div class="flex gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><div class="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-900/20 text-brand-700 grid place-items-center"><i data-lucide="${x[0]}"></i></div><div><div class="text-xs text-slate-400">${x[1]}</div><div class="font-bold mt-1">${x[2]}</div></div></div>`).join('')}</div></div><div class="rounded-3xl bg-slate-100 dark:bg-slate-900 min-h-[450px] grid place-items-center text-center p-10"><div><i data-lucide="map" size="52" class="mx-auto text-brand-700"></i><h3 class="text-2xl font-black mt-5">Office Location</h3><p class="text-slate-500 mt-2">Replace this area with the official Google Maps embed for your Gram Panchayat.</p></div></div></div></section>`}
 
 /* =========================================================
    ADMIN LOGIN
@@ -419,16 +315,7 @@ async function requestLocationAndOpenAdmin(){
 function openAdminLogin(){const m=document.getElementById('loginModal');m.classList.remove('hidden');m.classList.add('flex')}
 function closeLogin(){const m=document.getElementById('loginModal');m.classList.add('hidden');m.classList.remove('flex')}
 function togglePass(){const x=document.getElementById('loginPass');x.type=x.type==='password'?'text':'password'}
-async function login(e){
-e.preventDefault();
-try{await verifyYerlaLocation()}catch(err){toast(err.message,'error');return}
-if(document.getElementById('loginUser').value==='admin'&&document.getElementById('loginPass').value==='admin123'){
-adminLogged=true;localStorage.setItem('gp_admin','1');closeLogin();
-document.getElementById('publicSite').classList.add('hidden');
-document.getElementById('adminApp').classList.remove('hidden');
-adminPage('dashboard');toast('Login successful • Yerla location verified')
-}else toast('Invalid username or password','error')
-}
+function login(e){e.preventDefault();if(document.getElementById('loginUser').value==='admin'&&document.getElementById('loginPass').value==='admin123'){adminLogged=true;localStorage.setItem('gp_admin','1');closeLogin();document.getElementById('publicSite').classList.add('hidden');document.getElementById('adminApp').classList.remove('hidden');adminPage('dashboard');toast('Login successful')}else toast('Invalid username or password','error')}
 function logout(){adminLogged=false;localStorage.removeItem('gp_admin');publicSite();toast('Logged out')}
 function openSidebar(){document.getElementById('sidebar').classList.remove('-translate-x-full');document.getElementById('mobileOverlay').classList.remove('hidden')}
 function closeSidebar(){document.getElementById('sidebar').classList.add('-translate-x-full');document.getElementById('mobileOverlay').classList.add('hidden')}
@@ -477,7 +364,7 @@ function deleteEmployee(id){const e=data.employees.find(x=>x.id===id);if(!confir
 
 function adminAttendance(){
  const d=document.getElementById('attDate')?.value||today();const holiday=isHoliday(d);
- return `<div class="page"><div class="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-7"><div><div class="eyebrow">Daily Records</div><h2 class="heading">Attendance</h2><p class="muted">Record daily employee attendance with one click.</p></div><div class="grid grid-cols-1 sm:flex gap-2 w-full md:w-auto"><input id="attDate" type="date" value="${d}" onchange="adminPage('attendance')" class="input w-full sm:w-auto"><button onclick="markAllPresent()" class="btn-secondary justify-center">Mark All Present</button><button onclick="saveAttendance()" class="btn-primary justify-center">Save Attendance</button></div></div>
+ return `<div class="page"><div class="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-7"><div><div class="eyebrow">Daily Records</div><h2 class="heading">Attendance</h2><p class="muted">Record daily employee attendance with one click.</p></div><div class="flex gap-2"><input id="attDate" type="date" value="${d}" onchange="adminPage('attendance')" class="input w-auto"><button onclick="markAllPresent()" class="btn-secondary">Mark All Present</button><button onclick="saveAttendance()" class="btn-primary">Save Attendance</button></div></div>
  ${holiday?`<div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 mb-5 flex gap-3"><i data-lucide="calendar-off"></i><b>Today is a registered holiday.</b></div>`:''}
  <div class="grid sm:grid-cols-3 gap-4 mb-5"><div class="mini"><span>Present</span><b id="sumP">0</b></div><div class="mini"><span>Absent</span><b id="sumA">0</b></div><div class="mini"><span>Leave</span><b id="sumL">0</b></div></div>
  <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden">${tableWrap('<th class="th">Employee</th><th class="th">Department</th><th class="th">Status</th>',data.employees.map(e=>`<tr class="border-t border-slate-100 dark:border-slate-800"><td class="td font-bold">${esc(e.name)}</td><td class="td">${esc(e.dept)}</td><td class="td"><div class="flex gap-2" data-emp="${e.id}">${['Present','Absent','Leave'].map(s=>`<button onclick="setAtt(${e.id},'${s}')" class="statusbtn ${getStatus(d,e.id)===s?'selected '+s.toLowerCase():''}">${s}</button>`).join('')}</div></td></tr>`).join(''))}</div></div>`;
