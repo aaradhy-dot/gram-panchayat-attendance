@@ -54,7 +54,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
   <div class="bg-slate-950 text-slate-200 text-xs">
     <div class="max-w-7xl mx-auto px-4 py-2 flex flex-wrap gap-4 justify-between">
       <div>Government of Maharashtra • Gram Panchayat Digital Portal</div>
-      <div class="flex gap-4"><span>📞 0712-0000000</span><span>✉ panchayat@example.gov.in</span></div>
+      <div class="flex gap-4"><a href="tel:+918007362919" class="hover:text-white">📞 8007362919</a><span>✉ panchayat@example.gov.in</span></div>
     </div>
   </div>
 
@@ -115,7 +115,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
         <p class="text-sm leading-7 text-slate-400 max-w-xl">A modern digital platform for transparent local governance, citizen information, staff administration and village development.</p>
       </div>
       <div><h4 class="font-bold text-white mb-3">Quick Links</h4><div class="space-y-2 text-sm"><button onclick="publicPage('notices')" class="block hover:text-white">Notices</button><button onclick="publicPage('schemes')" class="block hover:text-white">Schemes</button><button onclick="publicPage('documents')" class="block hover:text-white">Documents</button></div></div>
-      <div><h4 class="font-bold text-white mb-3">Office</h4><p class="text-sm text-slate-400 leading-6">Gram Panchayat Office<br>Taluka, District<br>Maharashtra, India<br>Mon–Sat • 10:00 AM–5:30 PM</p></div>
+      <div><h4 class="font-bold text-white mb-3">Office</h4><p id="footerOffice" class="text-sm text-slate-400 leading-6"></p></div>
     </div>
     <div class="border-t border-slate-800"><div class="max-w-7xl mx-auto px-4 py-5 text-xs text-slate-500 flex justify-between gap-4 flex-wrap"><span>© 2026 Gram Panchayat. All rights reserved.</span><span>Digital Governance • Citizen First</span></div></div>
   </footer>
@@ -190,6 +190,18 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 <div id="toast" class="fixed z-[120] right-4 bottom-4 translate-y-20 opacity-0 transition-all duration-300"><div id="toastText" class="px-5 py-3 rounded-2xl bg-slate-900 text-white shadow-xl text-sm font-bold"></div></div>
 
 <script>
+/* =========================================================
+   OFFICE DETAILS (change here, updates everywhere)
+========================================================= */
+const OFFICE={
+  name:'Gram Panchayat Office Yerla',
+  address:'Gram Panchayat Office Yerla, Nagpur–Katol Road (SH-248), Yerla, Nagpur, Maharashtra 441501',
+  mapQuery:'Gram Panchayat Office Yerla, Nagpur, Maharashtra 441501',
+  phone:'8007362919',
+  email:'panchayat@example.gov.in',
+  hours:'Monday to Saturday • 10:00 AM – 5:30 PM'
+};
+
 /* =========================================================
    DATA / STORAGE
 ========================================================= */
@@ -307,7 +319,18 @@ function publicWorksHTML(){return `<section class="max-w-7xl mx-auto px-4 py-16"
 function publicNoticesHTML(){return `<section class="max-w-5xl mx-auto px-4 py-16"><div class="text-xs uppercase tracking-widest font-black text-brand-700">Public Information</div><h1 class="text-4xl font-black mt-3">Notices & Announcements</h1><div class="space-y-4 mt-10">${data.notices.map(n=>noticeCard(n)).join('')}</div></section>`}
 function publicDocumentsHTML(){return `<section class="max-w-6xl mx-auto px-4 py-16"><div class="text-xs uppercase tracking-widest font-black text-brand-700">Resources</div><h1 class="text-4xl font-black mt-3">Documents & Forms</h1><div class="overflow-hidden mt-10 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"><div class="divide-y divide-slate-200 dark:divide-slate-800">${data.documents.map(d=>`<div class="p-5 flex items-center justify-between gap-4"><div class="flex items-center gap-4"><div class="w-11 h-11 rounded-xl bg-red-50 text-red-600 grid place-items-center"><i data-lucide="file-text"></i></div><div><h3 class="font-bold">${esc(d.title)}</h3><p class="text-xs text-slate-400 mt-1">${esc(d.type)} • ${fmt(d.date)}</p></div></div><a href="${esc(d.url)}" class="px-4 py-2 rounded-xl bg-brand-50 text-brand-700 font-bold text-sm">View</a></div>`).join('')}</div></div></section>`}
 function publicGalleryHTML(){return `<section class="max-w-7xl mx-auto px-4 py-16"><div class="text-xs uppercase tracking-widest font-black text-brand-700">Village Life</div><h1 class="text-4xl font-black mt-3">Photo Gallery</h1><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">${data.gallery.map(g=>`<figure class="group rounded-3xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><img src="${esc(g.image)}" class="w-full aspect-[4/3] object-cover group-hover:scale-105 transition duration-500" alt="${esc(g.title)}"><figcaption class="p-4 font-bold">${esc(g.title)}</figcaption></figure>`).join('')}</div></section>`}
-function publicContactHTML(){return `<section class="max-w-7xl mx-auto px-4 py-16"><div class="grid lg:grid-cols-2 gap-10"><div><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('contact')}</div><h1 class="text-4xl font-black mt-3">We are here to serve.</h1><p class="text-slate-500 mt-5 leading-7">For applications, certificates, schemes and local governance queries, visit the Panchayat office during working hours.</p><div class="space-y-4 mt-8">${[['map-pin','Office Address','Gram Panchayat Office, Taluka, District, Maharashtra'],['phone','Phone','0712-0000000'],['mail','Email','panchayat@example.gov.in'],['clock','Office Hours','Monday to Saturday • 10:00 AM – 5:30 PM']].map(x=>`<div class="flex gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><div class="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-900/20 text-brand-700 grid place-items-center"><i data-lucide="${x[0]}"></i></div><div><div class="text-xs text-slate-400">${x[1]}</div><div class="font-bold mt-1">${x[2]}</div></div></div>`).join('')}</div></div><div class="rounded-3xl bg-slate-100 dark:bg-slate-900 min-h-[450px] grid place-items-center text-center p-10"><div><i data-lucide="map" size="52" class="mx-auto text-brand-700"></i><h3 class="text-2xl font-black mt-5">Office Location</h3><p class="text-slate-500 mt-2">Replace this area with the official Google Maps embed for your Gram Panchayat.</p></div></div></div></section>`}
+
+function publicContactHTML(){
+ const q=encodeURIComponent(OFFICE.mapQuery);
+ return `<section class="max-w-7xl mx-auto px-4 py-16"><div class="grid lg:grid-cols-2 gap-10"><div><div class="text-xs uppercase tracking-widest font-black text-brand-700">${T('contact')}</div><h1 class="text-4xl font-black mt-3">We are here to serve.</h1><p class="text-slate-500 mt-5 leading-7">For applications, certificates, schemes and local governance queries, visit the Panchayat office during working hours.</p>
+ <div class="space-y-4 mt-8">${[
+  ['map-pin','Office Address',esc(OFFICE.address),'https://www.google.com/maps/search/?api=1&query='+q],
+  ['phone','Phone',esc(OFFICE.phone),'tel:+91'+OFFICE.phone],
+  ['mail','Email',esc(OFFICE.email),'mailto:'+OFFICE.email],
+  ['clock','Office Hours',esc(OFFICE.hours),'']
+ ].map(x=>{const inner=`<div class="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-900/20 text-brand-700 grid place-items-center shrink-0"><i data-lucide="${x[0]}"></i></div><div><div class="text-xs text-slate-400">${x[1]}</div><div class="font-bold mt-1">${x[2]}</div></div>`;const cls='flex gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800';return x[3]?`<a href="${x[3]}" ${x[3].startsWith('http')?'target="_blank" rel="noopener"':''} class="${cls} card-hover">${inner}</a>`:`<div class="${cls}">${inner}</div>`}).join('')}</div></div>
+ <div class="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 min-h-[450px] flex flex-col"><iframe title="Office Location" class="w-full flex-1 min-h-[400px] border-0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${q}&z=16&output=embed"></iframe><div class="p-4 flex flex-wrap gap-3 justify-between items-center"><div class="text-sm font-bold flex items-center gap-2"><i data-lucide="map-pin" size="16"></i>${esc(OFFICE.name)}</div><a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${q}" class="btn-primary"><i data-lucide="navigation" size="16"></i>Get Directions</a></div></div></div></section>`
+}
 
 /* =========================================================
    ADMIN LOGIN
@@ -410,7 +433,7 @@ function adminReports(){return `<div class="page"><div class="flex flex-col md:f
 function monthRows(){const m=(document.getElementById('reportMonth')?.value||today().slice(0,7));const days={};Object.keys(data.attendance).filter(d=>d.startsWith(m)).forEach(d=>days[d]=data.attendance[d]);return {m,days}}
 function reportTable(){const {days}=monthRows();return `<div class="p-6"><h3 class="font-black text-lg">Monthly Employee Attendance</h3><div class="overflow-x-auto mt-5"><table class="w-full text-sm"><thead><tr><th class="th">Employee</th><th class="th">Present</th><th class="th">Absent</th><th class="th">Leave</th><th class="th">Rate</th></tr></thead><tbody>${data.employees.map(e=>{let p=0,a=0,l=0;Object.values(days).forEach(day=>{if(day[e.id]==='Present')p++;if(day[e.id]==='Absent')a++;if(day[e.id]==='Leave')l++});let total=p+a+l;return `<tr class="border-t border-slate-100 dark:border-slate-800"><td class="td font-bold">${esc(e.name)}</td><td class="td">${p}</td><td class="td">${a}</td><td class="td">${l}</td><td class="td font-black">${total?Math.round(p/total*100):0}%</td></tr>`}).join('')}</tbody></table></div></div>`}
 function drawReportChart(){const {days}=monthRows();let labels=Object.keys(days).sort();let p=labels.map(d=>Object.values(days[d]).filter(x=>x==='Present').length);let a=labels.map(d=>Object.values(days[d]).filter(x=>x==='Absent').length);let l=labels.map(d=>Object.values(days[d]).filter(x=>x==='Leave').length);charts.report?.destroy();charts.report=new Chart(document.getElementById('reportChart'),{type:'bar',data:{labels,datasets:[{label:'Present',data:p},{label:'Absent',data:a},{label:'Leave',data:l}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}}});const total=p.reduce((a,b)=>a+b,0)+a.reduce((a,b)=>a+b,0)+l.reduce((a,b)=>a+b,0);document.getElementById('workDays').textContent=labels.length;document.getElementById('presentRecords').textContent=p.reduce((a,b)=>a+b,0);document.getElementById('attRate').textContent=total?Math.round(p.reduce((a,b)=>a+b,0)/total*100)+'%':'0%'}
-function exportCSV(){const {days}=monthRows();let rows=[['Employee','Department','Present','Absent','Leave','Attendance %']];data.employees.forEach(e=>{let p=0,a=0,l=0;Object.values(days).forEach(day=>{p+=day[e.id]==='Present';a+=day[e.id]==='Absent';l+=day[e.id]==='Leave'});let total=p+a+l;rows.push([e.name,e.dept,p,a,l,total?Math.round(p/total*100):0])});const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\\n');const blob=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gram-panchayat-attendance.csv';a.click();URL.revokeObjectURL(a.href);toast('CSV exported')}
+function exportCSV(){const {days}=monthRows();let rows=[['Employee','Department','Present','Absent','Leave','Attendance %']];data.employees.forEach(e=>{let p=0,a=0,l=0;Object.values(days).forEach(day=>{p+=day[e.id]==='Present';a+=day[e.id]==='Absent';l+=day[e.id]==='Leave'});let total=p+a+l;rows.push([e.name,e.dept,p,a,l,total?Math.round(p/total*100):0])});const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gram-panchayat-attendance.csv';a.click();URL.revokeObjectURL(a.href);toast('CSV exported')}
 
 function adminAudit(){return `<div class="page"><div class="mb-7"><div class="eyebrow">Security & Accountability</div><h2 class="heading">Activity Log</h2><p class="muted">Recent administrative actions recorded by the portal.</p></div><div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden">${tableWrap('<th class="th">Date & Time</th><th class="th">User</th><th class="th">Action</th>',data.audit.length?data.audit.map(a=>`<tr class="border-t border-slate-100 dark:border-slate-800"><td class="td">${new Date(a.date).toLocaleString('en-IN')}</td><td class="td">${esc(a.user)}</td><td class="td font-medium">${esc(a.action)}</td></tr>`).join(''):`<tr><td colspan="3" class="td text-center text-slate-400 py-12">No activity recorded yet.</td></tr>`)}</div></div>`}
 
@@ -443,6 +466,9 @@ style.textContent=`
 .modalTitle{font-size:1.5rem;font-weight:900}.modalTitle{padding:1.75rem 1.75rem 0}
 `;
 document.head.appendChild(style);
+
+/* FOOTER OFFICE DETAILS */
+document.getElementById('footerOffice').innerHTML=`${esc(OFFICE.address)}<br>📞 <a href="tel:+91${OFFICE.phone}" class="hover:text-white">${OFFICE.phone}</a><br>Mon–Sat • 10:00 AM–5:30 PM`;
 
 /* START */
 document.getElementById('publicLang').value=lang;
